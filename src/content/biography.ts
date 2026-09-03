@@ -20,7 +20,6 @@ export const eras: Era[] = [
       { src: '/media/childhood/arina-little-08.webp', alt: 'Арина в детстве дома', caption: 'Домашний кадр' },
       { src: '/media/childhood/arina-little-09.webp', alt: 'Арина на детском празднике', caption: 'Утренник' },
       { src: '/media/childhood/baby-01.gif', alt: 'Арина совсем маленькая в движении', caption: 'Ранний GIF' },
-      { src: '/media/childhood/baby-02.gif', alt: 'Арина в детстве улыбается на видео', caption: 'Видеоархив' },
     ],
     song: {
       title: 'Три желания',
@@ -62,7 +61,7 @@ export const eras: Era[] = [
     song: {
       title: 'Самый лучший эмо панк',
       artist: 'Пошлая Молли',
-      src: '/media/audio/Пошлая Молли - Самый лучший эмо панк.mp3',
+      src: '/media/audio/Пошлая Молли - Самый лучший эмо панк.mp3',
     },
   },
   {
@@ -110,12 +109,6 @@ export const eras: Era[] = [
     title: 'Второй курс.exe',
     years: 'сентябрь 2026',
     story: 'Загрузка новой главы. Всё только начинается.',
-    video: {
-      src: '/media/urfu/year-2.gif',
-      title: 'Видео второго курса',
-      description: 'Первый кадр новой главы',
-      kind: 'gif',
-    },
     photos: [],
     song: {
       title: 'MISS U',
