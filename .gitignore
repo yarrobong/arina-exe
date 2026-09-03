@@ -3,3 +3,6 @@ dist/
 .DS_Store
 media-originals/
 *.log
+.wrangler/
+.dev.vars*
+!.dev.vars.example
