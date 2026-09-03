@@ -9,7 +9,7 @@ export const friends: Person[] = [
   { name: 'Олеся', photo: '/media/friends/olesya.webp' },
   { name: 'Сергей (папа)' },
   { name: 'Верника (мама)' },
-  { name: 'Вадим', photo: '/media/friends/vadim.gif' },
+  { name: 'Вадим' },
   { name: 'Ярослав' },
   { name: 'Вера (бабушка)', photo: '/media/childhood/arina-little-03.webp' },
   { name: 'Амина (бабушка)', photo: '/media/childhood/arina-little-10.webp' },
