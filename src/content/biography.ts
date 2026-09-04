@@ -19,8 +19,6 @@ export const eras: Era[] = [
       { src: '/media/childhood/arina-little-07.webp', alt: 'Арина с папой и грибами', caption: 'Семейная добыча' },
       { src: '/media/childhood/arina-little-08.webp', alt: 'Арина в детстве дома', caption: 'Домашний кадр' },
       { src: '/media/childhood/arina-little-09.webp', alt: 'Арина на детском празднике', caption: 'Утренник' },
-      { src: '/media/childhood/baby-01.webm', alt: 'Арина совсем маленькая в движении', caption: 'Ранний WebM' },
-      { src: '/media/childhood/baby-02.webm', alt: 'Ещё одно детское видео Арины', caption: 'Детский видеоархив' },
     ],
     song: {
       title: 'Три желания',
