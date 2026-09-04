@@ -29,13 +29,22 @@ const tapes: Tape[] = [
   },
 ]
 
+function formatTapeTime(seconds: number) {
+  const safe = Number.isFinite(seconds) ? Math.max(0, Math.floor(seconds)) : 0
+  const minutes = Math.floor(safe / 60)
+  const rest = safe % 60
+  return `00:${String(minutes).padStart(2, '0')}:${String(rest).padStart(2, '0')}`
+}
+
 export function VideoArchive() {
   const [active, setActive] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
   const [tracking, setTracking] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
   const videoRef = useRef<HTMLVideoElement>(null)
   const touchStartX = useRef<number | null>(null)
   const switchTimer = useRef<number | null>(null)
+  const resumeAfterSwitch = useRef(false)
   const activeTape = tapes[active]
 
   useEffect(() => {
@@ -54,11 +63,15 @@ export function VideoArchive() {
 
   const switchTape = (next: number) => {
     if (next === active || tracking) return
+    resumeAfterSwitch.current = isPlaying
     setIsPlaying(false)
+    setCurrentTime(0)
     setTracking(true)
     switchTimer.current = window.setTimeout(() => {
       setActive(next)
       setTracking(false)
+      if (resumeAfterSwitch.current) setIsPlaying(true)
+      resumeAfterSwitch.current = false
       switchTimer.current = null
     }, 320)
   }
@@ -114,13 +127,14 @@ export function VideoArchive() {
               loop
               preload="metadata"
               onClick={() => setIsPlaying((value) => !value)}
+              onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
               aria-label={activeTape.title}
             />
           </motion.div>
         </AnimatePresence>
 
         <div className="video-archive__scanlines" aria-hidden="true" />
-        <div className="video-archive__counter" aria-hidden="true">{isPlaying ? 'PLAY' : 'PAUSE'} · SP</div>
+        <div className="video-archive__counter" aria-hidden="true">{formatTapeTime(currentTime)}</div>
 
         <button
           className="video-archive__play"
