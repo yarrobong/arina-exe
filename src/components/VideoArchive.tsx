@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { assetUrl } from '../utils/assetUrl'
+import '../styles/video-archive.css'
 
 type Tape = {
   id: string
@@ -32,6 +33,8 @@ export function VideoArchive() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [tracking, setTracking] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
+  const touchStartX = useRef<number | null>(null)
+  const switchTimer = useRef<number | null>(null)
   const activeTape = tapes[active]
 
   useEffect(() => {
@@ -44,19 +47,37 @@ export function VideoArchive() {
     void video.play().catch(() => setIsPlaying(false))
   }, [isPlaying, active])
 
+  useEffect(() => () => {
+    if (switchTimer.current !== null) window.clearTimeout(switchTimer.current)
+  }, [])
+
   const switchTape = (next: number) => {
-    if (next === active) return
+    if (next === active || tracking) return
     setIsPlaying(false)
     setTracking(true)
-    window.setTimeout(() => {
+    switchTimer.current = window.setTimeout(() => {
       setActive(next)
       setTracking(false)
+      switchTimer.current = null
     }, 320)
   }
 
   const step = (direction: -1 | 1) => {
     const next = (active + direction + tapes.length) % tapes.length
     switchTape(next)
+  }
+
+  const onTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    touchStartX.current = event.touches[0]?.clientX ?? null
+  }
+
+  const onTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (touchStartX.current === null) return
+    const endX = event.changedTouches[0]?.clientX ?? touchStartX.current
+    const delta = endX - touchStartX.current
+    touchStartX.current = null
+    if (Math.abs(delta) < 48) return
+    step(delta < 0 ? 1 : -1)
   }
 
   return (
@@ -69,7 +90,7 @@ export function VideoArchive() {
         <strong>{String(active + 1).padStart(2, '0')} / {String(tapes.length).padStart(2, '0')}</strong>
       </div>
 
-      <div className="video-archive__screen">
+      <div className="video-archive__screen" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
         <div className="video-archive__hud" aria-hidden="true">
           <span className="video-archive__rec"><i /> REC</span>
           <span>{activeTape.year}<br />SP</span>
@@ -82,7 +103,7 @@ export function VideoArchive() {
             initial={{ opacity: 0, scale: 1.025, filter: 'blur(6px)' }}
             animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
             exit={{ opacity: 0, scale: 0.99, filter: 'blur(4px)' }}
-            transition={{ duration: 0.35 }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
           >
             <video
               ref={videoRef}
@@ -98,7 +119,7 @@ export function VideoArchive() {
         </AnimatePresence>
 
         <div className="video-archive__scanlines" aria-hidden="true" />
-        <div className="video-archive__counter" aria-hidden="true">00:00:{isPlaying ? 'REC' : 'PAUSE'}</div>
+        <div className="video-archive__counter" aria-hidden="true">{isPlaying ? 'PLAY' : 'PAUSE'} · SP</div>
 
         <button
           className="video-archive__play"
@@ -116,6 +137,7 @@ export function VideoArchive() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.12 }}
             >
               <span>TRACKING...</span>
             </motion.div>
@@ -136,6 +158,7 @@ export function VideoArchive() {
             className={index === active ? 'video-tape is-active' : 'video-tape'}
             type="button"
             onClick={() => switchTape(index)}
+            aria-pressed={index === active}
           >
             <span className="video-tape__icon" aria-hidden="true"><i /><b>{String(index + 1).padStart(2, '0')}</b><i /></span>
             <span><small>TAPE {String(index + 1).padStart(2, '0')}</small><strong>{tape.year}</strong></span>
@@ -145,7 +168,7 @@ export function VideoArchive() {
 
       <div className="video-archive__controls">
         <button type="button" onClick={() => step(-1)}>‹ PREV</button>
-        <span>каждая плёнка — часть архива</span>
+        <span>свайпни плёнку</span>
         <button type="button" onClick={() => step(1)}>NEXT ›</button>
       </div>
     </section>
