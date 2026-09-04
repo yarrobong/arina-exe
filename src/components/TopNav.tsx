@@ -2,6 +2,7 @@ const items = [
   ['#childhood', 'детство'],
   ['#geography', 'карта'],
   ['#school-5-9', 'школа'],
+  ['#sport', 'спорт'],
   ['#evolution', 'версии'],
   ['#university', 'УрФУ'],
   ['#friends', 'люди'],

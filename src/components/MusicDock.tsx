@@ -23,6 +23,7 @@ export const MusicDock = forwardRef<MusicDockHandle>(function MusicDock(_, ref) 
   const promptTimer = useRef<number | null>(null)
   const track = tracks[index]
   const hasAudio = Boolean(track.src)
+  const showPlayPrompt = showPrompt && !playing && hasAudio
   const status = useMemo(() => hasAudio ? (playing ? 'играет' : 'пауза') : 'ожидает трек', [hasAudio, playing])
 
   const next = () => { audio.current?.pause(); setPlaying(false); setIndex((i) => (i + 1) % tracks.length) }
@@ -91,19 +92,21 @@ export const MusicDock = forwardRef<MusicDockHandle>(function MusicDock(_, ref) 
   }
 
   return (
-    <div className="music-dock">
+    <div className={`music-dock${showPlayPrompt ? ' music-dock--prompt' : ''}`}>
       <audio ref={audio} src={track.src || undefined} onEnded={next} />
       <button onClick={prev} aria-label="Предыдущий трек">‹</button>
-      <button className="music-dock__play" onClick={toggle} aria-label="Воспроизвести или поставить на паузу">{playing ? 'Ⅱ' : '▶'}</button>
+      <button
+        className={`music-dock__play${showPlayPrompt ? ' music-dock__play--prompt' : ''}`}
+        onClick={toggle}
+        aria-label={showPlayPrompt ? 'Включить музыку главы' : 'Воспроизвести или поставить на паузу'}
+      >
+        <span className="music-dock__play-icon" aria-hidden="true">{playing ? 'Ⅱ' : '▶'}</span>
+        {showPlayPrompt && <span className="music-dock__prompt-label">Включить музыку главы</span>}
+      </button>
       <div className="music-dock__meta">
         <span>{track.era} · {status}</span>
         <strong>{track.title}</strong>
         <small>{track.artist}</small>
-        {showPrompt && !playing && hasAudio && (
-          <button className="music-dock__prompt" type="button" onClick={toggle}>
-            Включить музыку главы
-          </button>
-        )}
       </div>
       <button onClick={next} aria-label="Следующий трек">›</button>
     </div>

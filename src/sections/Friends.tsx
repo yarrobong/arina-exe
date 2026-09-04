@@ -9,7 +9,13 @@ export function Friends() {
         {friends.map((friend) => (
           <article className="person-card" key={friend.name}>
             <div className="person-card__photo">
-              {friend.photo && <img src={friend.photo} alt={`Фото: ${friend.name}`} onError={(event) => { event.currentTarget.style.display = 'none' }} />}
+              {friend.photo?.toLowerCase().endsWith('.webm') ? (
+                <video autoPlay loop muted playsInline preload="metadata" aria-label={`Видео: ${friend.name}`}>
+                  <source src={friend.photo} type="video/webm" />
+                </video>
+              ) : friend.photo ? (
+                <img src={friend.photo} alt={`Фото: ${friend.name}`} onError={(event) => { event.currentTarget.style.display = 'none' }} />
+              ) : null}
             </div>
             <strong>{friend.name}</strong>
           </article>

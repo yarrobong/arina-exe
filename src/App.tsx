@@ -12,6 +12,7 @@ import { Facts } from './sections/Facts'
 import { Inventory } from './sections/Inventory'
 import { Compromat } from './sections/Compromat'
 import { Future } from './sections/Future'
+import { SportArchive } from './sections/SportArchive'
 
 export default function App() {
   const musicDock = useRef<MusicDockHandle>(null)
@@ -52,6 +53,7 @@ export default function App() {
         <Geography />
         <EraSection era={eras[1]} onPlay={playChapter} />
         <EraSection era={eras[2]} onPlay={playChapter} />
+        <SportArchive />
         <Evolution />
         <EraSection era={eras[3]} onPlay={playChapter} />
         <section id="university">

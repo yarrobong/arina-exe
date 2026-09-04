@@ -35,6 +35,10 @@ export type Place = {
   address?: string
   years: string
   story: string
+  chapter: string
+  era: string
   coordinates?: [number, number]
   zoom?: number
+  bearing?: number
+  pitch?: number
 }
