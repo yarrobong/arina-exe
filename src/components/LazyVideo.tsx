@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNearViewport } from '../hooks/useNearViewport'
+import { assetUrl } from '../utils/assetUrl'
 
 type LazyVideoProps = {
   src: string
@@ -26,6 +27,7 @@ export function LazyVideo({
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isVisible, setIsVisible] = useState(false)
   const [isReady, setIsReady] = useState(false)
+  const resolvedSrc = assetUrl(src)
 
   useEffect(() => {
     const node = shellRef.current
@@ -59,7 +61,7 @@ export function LazyVideo({
       {!isReady && <div className="lazy-video__placeholder" aria-hidden="true"><span>MEDIA</span></div>}
       <video
         ref={videoRef}
-        src={isNear ? src : undefined}
+        src={isNear ? resolvedSrc : undefined}
         autoPlay={autoPlay && isVisible}
         controls={controls}
         loop={loop}
