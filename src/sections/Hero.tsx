@@ -94,6 +94,12 @@ export function Hero() {
           ))}
         </div>
 
+        <div className="hero__system-status" aria-hidden="true">
+          <span>SYSTEM ONLINE</span>
+          <strong>ARINA.EXE</strong>
+          <small>PERSONAL MEMORY ARCHIVE · 2007 → NOW</small>
+        </div>
+
         <div className="hero__counter" aria-live="polite" aria-label={`Фото ${activeIndex + 1} из ${slides.length}`}>
           <span>{String(activeIndex + 1).padStart(2, '0')}</span>
           <small>/ {String(slides.length).padStart(2, '0')}</small>
