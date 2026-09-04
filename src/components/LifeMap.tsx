@@ -284,8 +284,8 @@ export function LifeMap() {
     map.touchZoomRotate.disable()
     map.doubleClickZoom.disable()
     map.keyboard.disable()
-    moveCamera(map, currentPlace, window.matchMedia('(prefers-reduced-motion: reduce)').matches)
-  }, [currentPlace, isExploreMode])
+    moveCamera(map, places[activeRef.current], window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+  }, [isExploreMode])
 
   const selectStep = (index: number) => {
     const step = document.querySelector<HTMLElement>(`.life-map__step[data-index="${index}"]`)
