@@ -8,6 +8,7 @@ export function CourseVideo({ video }: { video: Video }) {
   const [hasError, setHasError] = useState(false)
   const [retryToken, setRetryToken] = useState(0)
   const isGif = video.kind === 'gif'
+  const format = video.src.split('.').pop()?.toUpperCase() ?? 'VIDEO'
 
   const retry = () => {
     setHasError(false)
@@ -34,6 +35,7 @@ export function CourseVideo({ video }: { video: Video }) {
                 controls
                 autoPlay={false}
                 loop={false}
+                preloadWhenNear="none"
                 src={video.src}
                 ariaLabel={video.title}
                 onError={() => setHasError(true)}
@@ -43,9 +45,9 @@ export function CourseVideo({ video }: { video: Video }) {
         ) : (
           <div className="course-video__empty">
             <span className="course-video__empty-icon" aria-hidden="true">▶</span>
-            <strong>Видео скоро загрузится</strong>
-            <span>Добавь файл в <code>{video.src}</code></span>
-            <button type="button" onClick={retry}>Проверить снова</button>
+            <strong>Не удалось загрузить видео</strong>
+            <span>Проверь соединение и попробуй ещё раз.</span>
+            <button type="button" onClick={retry}>Повторить</button>
           </div>
         )}
       </div>
@@ -54,7 +56,7 @@ export function CourseVideo({ video }: { video: Video }) {
           <strong>{video.title}</strong>
           {video.description && <span>{video.description}</span>}
         </div>
-        {!isGif && <span className="course-video__format">MP4 / HD</span>}
+        {!isGif && <span className="course-video__format">{format} / HD</span>}
       </figcaption>
     </motion.figure>
   )
