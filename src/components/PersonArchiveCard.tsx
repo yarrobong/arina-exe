@@ -38,7 +38,7 @@ export function PersonArchiveCard({ person, index, total }: PersonArchiveCardPro
           <LazyVideo
             src={person.photo}
             ariaLabel={`Видео: ${person.name}`}
-            preloadWhenNear="metadata"
+            preloadWhenNear="none"
             onError={() => setMediaFailed(true)}
           />
         ) : hasMedia && person.photo ? (
