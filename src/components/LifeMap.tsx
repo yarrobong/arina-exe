@@ -1,14 +1,17 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { GeoJSONSource, Map as MapLibreMap, Marker, StyleSpecification } from 'maplibre-gl'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import '../styles/life-map.css'
 import { places } from '../content/places'
+import type { Place } from '../content/types'
 import { useActiveEra } from '../hooks/useActiveEra'
 import { useNearViewport } from '../hooks/useNearViewport'
 import { MapStoryCard } from './MapStoryCard'
 
 const ROUTE_SOURCE = 'life-route'
 const VISITED_SOURCE = 'life-route-visited'
+const SHORT_MOVE_KM = 90
 
 const MAP_STYLE: StyleSpecification = {
   version: 8,
@@ -48,17 +51,72 @@ function routeFeature(coordinates: [number, number][]) {
   }
 }
 
+function distanceKm(from: [number, number], to: [number, number]) {
+  const toRadians = (value: number) => value * Math.PI / 180
+  const earthRadiusKm = 6371
+  const lat1 = toRadians(from[1])
+  const lat2 = toRadians(to[1])
+  const deltaLat = toRadians(to[1] - from[1])
+  const deltaLng = toRadians(to[0] - from[0])
+  const a = Math.sin(deltaLat / 2) ** 2
+    + Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLng / 2) ** 2
+
+  return 2 * earthRadiusKm * Math.asin(Math.sqrt(a))
+}
+
+function moveCamera(map: MapLibreMap, place: Place, reduceMotion: boolean, immediate = false) {
+  if (!place.coordinates) return
+
+  map.stop()
+  const center = map.getCenter()
+  const distance = distanceKm([center.lng, center.lat], place.coordinates)
+  const camera = {
+    center: place.coordinates,
+    zoom: place.zoom ?? 11,
+    bearing: place.bearing ?? 0,
+    pitch: place.pitch ?? 44,
+    padding: { top: 76, right: 24, bottom: 270, left: 24 },
+  }
+
+  if (immediate || reduceMotion) {
+    map.jumpTo(camera)
+    return
+  }
+
+  if (distance < SHORT_MOVE_KM) {
+    map.easeTo({
+      ...camera,
+      duration: 850,
+      easing: (t) => 1 - Math.pow(1 - t, 3),
+      essential: false,
+    })
+    return
+  }
+
+  map.flyTo({
+    ...camera,
+    duration: 1150,
+    curve: 1.08,
+    speed: 1.25,
+    essential: false,
+  })
+}
+
 export function LifeMap() {
   const { ref: activationRef, isNear } = useNearViewport<HTMLDivElement>({ rootMargin: '700px 0px' })
   const container = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const markerRefs = useRef(new Map<string, Marker>())
   const activeRef = useRef(0)
+  const exploreModeRef = useRef(false)
   const mapReadyRef = useRef(false)
+  const [isExploreMode, setIsExploreMode] = useState(false)
   const { active, setActive, setStepRef } = useActiveEra(places.length)
   const currentPlace = places[active]
+  const routeComplete = active === places.length - 1
 
   activeRef.current = active
+  exploreModeRef.current = isExploreMode
 
   useEffect(() => {
     if (!isNear || !container.current || mapRef.current) return
@@ -105,11 +163,24 @@ export function LifeMap() {
         element.className = 'life-map__marker'
         element.setAttribute('role', 'img')
         element.setAttribute('aria-label', `${index + 1}. ${place.title}`)
+        element.setAttribute('tabindex', '-1')
         element.innerHTML = `
           <span class="life-map__marker-orbit"></span>
           <span class="life-map__marker-core">${String(index + 1).padStart(2, '0')}</span>
           <span class="life-map__marker-name">${place.title}</span>
         `
+
+        const inspectPlace = () => {
+          if (!exploreModeRef.current) return
+          setActive(index)
+          moveCamera(mapInstance, place, reduceMotion)
+        }
+        element.addEventListener('click', inspectPlace)
+        element.addEventListener('keydown', (event) => {
+          if (event.key !== 'Enter' && event.key !== ' ') return
+          event.preventDefault()
+          inspectPlace()
+        })
 
         const marker = new maplibre.Marker({ element, anchor: 'center' })
           .setLngLat(place.coordinates!)
@@ -122,29 +193,6 @@ export function LifeMap() {
           const element = markerRefs.current.get(place.id)?.getElement()
           element?.classList.toggle('is-active', index === activeIndex)
           element?.classList.toggle('is-visited', index < activeIndex)
-        })
-      }
-
-      const moveCamera = (index: number, immediate = false) => {
-        const place = places[index]
-        if (!place?.coordinates) return
-
-        mapInstance.stop()
-        const camera = {
-          center: place.coordinates,
-          zoom: place.zoom ?? 11,
-          bearing: place.bearing ?? 0,
-          pitch: place.pitch ?? 44,
-          padding: { top: 76, right: 24, bottom: 270, left: 24 },
-        }
-
-        if (immediate || reduceMotion) mapInstance.jumpTo(camera)
-        else mapInstance.flyTo({
-          ...camera,
-          duration: 1850,
-          curve: 1.28,
-          speed: 0.78,
-          essential: false,
         })
       }
 
@@ -179,7 +227,7 @@ export function LifeMap() {
         const initialIndex = activeRef.current
         updateMarkerStates(initialIndex)
         ;(mapInstance.getSource(VISITED_SOURCE) as GeoJSONSource).setData(routeFeature(route.slice(0, initialIndex + 1)))
-        moveCamera(initialIndex, true)
+        moveCamera(mapInstance, places[initialIndex], reduceMotion, true)
       })
 
       resizeObserver = new ResizeObserver(() => mapInstance.resize())
@@ -194,7 +242,7 @@ export function LifeMap() {
       mapRef.current = null
       mapReadyRef.current = false
     }
-  }, [isNear])
+  }, [isNear, setActive])
 
   useEffect(() => {
     const map = mapRef.current
@@ -209,18 +257,35 @@ export function LifeMap() {
     const route = places.filter((place) => place.coordinates).map((place) => place.coordinates!)
     ;(map.getSource(VISITED_SOURCE) as GeoJSONSource | undefined)?.setData(routeFeature(route.slice(0, active + 1)))
 
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const camera = {
-      center: currentPlace.coordinates,
-      zoom: currentPlace.zoom ?? 11,
-      bearing: currentPlace.bearing ?? 0,
-      pitch: currentPlace.pitch ?? 44,
-      padding: { top: 76, right: 24, bottom: 270, left: 24 },
+    if (isExploreMode) return
+    moveCamera(map, currentPlace, window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+  }, [active, currentPlace, isExploreMode])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !mapReadyRef.current) return
+
+    markerRefs.current.forEach((marker) => {
+      const element = marker.getElement()
+      element.setAttribute('role', isExploreMode ? 'button' : 'img')
+      element.setAttribute('tabindex', isExploreMode ? '0' : '-1')
+    })
+
+    if (isExploreMode) {
+      map.stop()
+      map.dragPan.enable()
+      map.touchZoomRotate.enable()
+      map.doubleClickZoom.enable()
+      map.keyboard.enable()
+      return
     }
-    map.stop()
-    if (reduceMotion) map.jumpTo(camera)
-    else map.flyTo({ ...camera, duration: 1850, curve: 1.28, speed: 0.78, essential: false })
-  }, [active, currentPlace])
+
+    map.dragPan.disable()
+    map.touchZoomRotate.disable()
+    map.doubleClickZoom.disable()
+    map.keyboard.disable()
+    moveCamera(map, currentPlace, window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+  }, [currentPlace, isExploreMode])
 
   const selectStep = (index: number) => {
     const step = document.querySelector<HTMLElement>(`.life-map__step[data-index="${index}"]`)
@@ -233,12 +298,12 @@ export function LifeMap() {
   }
 
   return (
-    <div ref={activationRef} className="life-map-story">
+    <div ref={activationRef} className={`life-map-story${isExploreMode ? ' is-explore' : ''}`}>
       <div className="life-map-story__sticky">
         <div className="life-map__canvas" ref={container} aria-label="Маршрут жизни Арины на карте" />
         <div className="life-map__atmosphere" aria-hidden="true" />
         <div className="life-map__chrome" aria-hidden="true">
-          <span>MEMORY MAP</span>
+          <span>{isExploreMode ? 'EXPLORE MODE' : 'MEMORY MAP'}</span>
           <i />
           <span>ARINA.EXE</span>
         </div>
@@ -253,7 +318,34 @@ export function LifeMap() {
           labels={places.map((place) => place.title)}
           onSelect={selectStep}
         />
-        <span className="life-map__scroll-cue" aria-hidden="true">листай историю <i>↓</i></span>
+
+        {routeComplete && !isExploreMode && (
+          <div className="life-map__completion" aria-live="polite">
+            <div>
+              <span>МАРШРУТ ПРОЙДЕН ✓</span>
+              <small>4 точки · одна история</small>
+            </div>
+            <button type="button" onClick={() => setIsExploreMode(true)}>
+              ИЗУЧИТЬ КАРТУ
+            </button>
+          </div>
+        )}
+
+        {isExploreMode && (
+          <div className="life-map__explore-toolbar">
+            <div>
+              <span>КАРТА РАЗБЛОКИРОВАНА</span>
+              <small>двигай · увеличивай · нажимай на точки</small>
+            </div>
+            <button type="button" onClick={() => setIsExploreMode(false)}>
+              ← К ИСТОРИИ
+            </button>
+          </div>
+        )}
+
+        {!routeComplete && !isExploreMode && (
+          <span className="life-map__scroll-cue" aria-hidden="true">листай историю <i>↓</i></span>
+        )}
       </div>
 
       <div className="life-map__steps" aria-label="Этапы маршрута">
