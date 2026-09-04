@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import type { GeoJSONSource, Map as MapLibreMap, Marker } from 'maplibre-gl'
+import type { GeoJSONSource, Map as MapLibreMap, Marker, StyleSpecification } from 'maplibre-gl'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { places } from '../content/places'
@@ -9,14 +9,31 @@ import { MapStoryCard } from './MapStoryCard'
 
 const ROUTE_SOURCE = 'life-route'
 const VISITED_SOURCE = 'life-route-visited'
-function hideRoadLayers(map: MapLibreMap) {
-  map.getStyle().layers
-    ?.filter((layer) => {
-      const layerConfig = layer as unknown as { sourceLayer?: string; 'source-layer'?: string }
-      const sourceLayer = layerConfig.sourceLayer ?? layerConfig['source-layer']
-      return sourceLayer === 'transportation' || sourceLayer === 'transportation_name'
-    })
-    .forEach((layer) => map.setLayoutProperty(layer.id, 'visibility', 'none'))
+
+const MAP_STYLE: StyleSpecification = {
+  version: 8,
+  sources: {
+    osm: {
+      type: 'raster',
+      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+      tileSize: 256,
+      maxzoom: 19,
+      attribution: '© OpenStreetMap contributors',
+    },
+  },
+  layers: [
+    {
+      id: 'osm-base',
+      type: 'raster',
+      source: 'osm',
+      paint: {
+        'raster-saturation': -0.85,
+        'raster-contrast': 0.2,
+        'raster-brightness-min': 0.03,
+        'raster-brightness-max': 0.42,
+      },
+    },
+  ],
 }
 
 function routeFeature(coordinates: [number, number][]) {
@@ -64,12 +81,12 @@ export function LifeMap() {
       const route = mappedPlaces.map((place) => place.coordinates!)
       const mapInstance = new maplibre.Map({
         container: container.current,
-        style: 'https://tiles.openfreemap.org/styles/dark',
+        style: MAP_STYLE,
         center: firstPlace.coordinates,
         zoom: firstPlace.zoom ?? 11,
         bearing: firstPlace.bearing ?? 0,
         pitch: firstPlace.pitch ?? 42,
-        attributionControl: false,
+        attributionControl: { compact: true },
         dragPan: false,
         scrollZoom: false,
         doubleClickZoom: false,
@@ -84,88 +101,86 @@ export function LifeMap() {
       mapRef.current = mapInstance
 
       mappedPlaces.forEach((place, index) => {
-      const element = document.createElement('div')
-      element.className = 'life-map__marker'
-      element.setAttribute('role', 'img')
-      element.setAttribute('aria-label', `${index + 1}. ${place.title}`)
-      element.innerHTML = `
-        <span class="life-map__marker-orbit"></span>
-        <span class="life-map__marker-core">${String(index + 1).padStart(2, '0')}</span>
-        <span class="life-map__marker-name">${place.title}</span>
-      `
+        const element = document.createElement('div')
+        element.className = 'life-map__marker'
+        element.setAttribute('role', 'img')
+        element.setAttribute('aria-label', `${index + 1}. ${place.title}`)
+        element.innerHTML = `
+          <span class="life-map__marker-orbit"></span>
+          <span class="life-map__marker-core">${String(index + 1).padStart(2, '0')}</span>
+          <span class="life-map__marker-name">${place.title}</span>
+        `
 
-      const marker = new maplibre.Marker({ element, anchor: 'center' })
-        .setLngLat(place.coordinates!)
-        .addTo(mapInstance)
-      markerRefs.current.set(place.id, marker)
-    })
-
-    const updateMarkerStates = (activeIndex: number) => {
-      places.forEach((place, index) => {
-        const element = markerRefs.current.get(place.id)?.getElement()
-        element?.classList.toggle('is-active', index === activeIndex)
-        element?.classList.toggle('is-visited', index < activeIndex)
+        const marker = new maplibre.Marker({ element, anchor: 'center' })
+          .setLngLat(place.coordinates!)
+          .addTo(mapInstance)
+        markerRefs.current.set(place.id, marker)
       })
-    }
 
-    const moveCamera = (index: number, immediate = false) => {
-      const place = places[index]
-      if (!place?.coordinates) return
-
-      mapInstance.stop()
-      const camera = {
-        center: place.coordinates,
-        zoom: place.zoom ?? 11,
-        bearing: place.bearing ?? 0,
-        pitch: place.pitch ?? 44,
-        padding: { top: 76, right: 24, bottom: 270, left: 24 },
+      const updateMarkerStates = (activeIndex: number) => {
+        places.forEach((place, index) => {
+          const element = markerRefs.current.get(place.id)?.getElement()
+          element?.classList.toggle('is-active', index === activeIndex)
+          element?.classList.toggle('is-visited', index < activeIndex)
+        })
       }
 
-      if (immediate || reduceMotion) mapInstance.jumpTo(camera)
-      else mapInstance.flyTo({
-        ...camera,
-        duration: 1850,
-        curve: 1.28,
-        speed: 0.78,
-        essential: false,
-      })
-    }
+      const moveCamera = (index: number, immediate = false) => {
+        const place = places[index]
+        if (!place?.coordinates) return
 
-    updateMarkerStates(0)
+        mapInstance.stop()
+        const camera = {
+          center: place.coordinates,
+          zoom: place.zoom ?? 11,
+          bearing: place.bearing ?? 0,
+          pitch: place.pitch ?? 44,
+          padding: { top: 76, right: 24, bottom: 270, left: 24 },
+        }
+
+        if (immediate || reduceMotion) mapInstance.jumpTo(camera)
+        else mapInstance.flyTo({
+          ...camera,
+          duration: 1850,
+          curve: 1.28,
+          speed: 0.78,
+          essential: false,
+        })
+      }
+
+      updateMarkerStates(0)
       mapInstance.once('load', () => {
-      hideRoadLayers(mapInstance)
-      const firstSymbolLayer = mapInstance.getStyle().layers?.find((layer) => layer.type === 'symbol')?.id
-      mapInstance.addSource(ROUTE_SOURCE, { type: 'geojson', data: routeFeature(route) })
-      mapInstance.addSource(VISITED_SOURCE, { type: 'geojson', data: routeFeature(route.slice(0, 1)) })
+        mapInstance.addSource(ROUTE_SOURCE, { type: 'geojson', data: routeFeature(route) })
+        mapInstance.addSource(VISITED_SOURCE, { type: 'geojson', data: routeFeature(route.slice(0, 1)) })
 
-      mapInstance.addLayer({
-        id: 'life-route-glow',
-        type: 'line',
-        source: ROUTE_SOURCE,
-        layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': '#ff4fa3', 'line-width': 9, 'line-opacity': 0.13, 'line-blur': 5 },
-      }, firstSymbolLayer)
-      mapInstance.addLayer({
-        id: 'life-route-line',
-        type: 'line',
-        source: ROUTE_SOURCE,
-        layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': '#bbb9c5', 'line-width': 1.25, 'line-opacity': 0.36, 'line-dasharray': [1.4, 2.1] },
-      }, firstSymbolLayer)
-      mapInstance.addLayer({
-        id: 'life-route-visited-line',
-        type: 'line',
-        source: VISITED_SOURCE,
-        layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': '#ff4fa3', 'line-width': 2.4, 'line-opacity': 0.92 },
-      }, firstSymbolLayer)
+        mapInstance.addLayer({
+          id: 'life-route-glow',
+          type: 'line',
+          source: ROUTE_SOURCE,
+          layout: { 'line-cap': 'round', 'line-join': 'round' },
+          paint: { 'line-color': '#ff4fa3', 'line-width': 9, 'line-opacity': 0.13, 'line-blur': 5 },
+        })
+        mapInstance.addLayer({
+          id: 'life-route-line',
+          type: 'line',
+          source: ROUTE_SOURCE,
+          layout: { 'line-cap': 'round', 'line-join': 'round' },
+          paint: { 'line-color': '#bbb9c5', 'line-width': 1.25, 'line-opacity': 0.36, 'line-dasharray': [1.4, 2.1] },
+        })
+        mapInstance.addLayer({
+          id: 'life-route-visited-line',
+          type: 'line',
+          source: VISITED_SOURCE,
+          layout: { 'line-cap': 'round', 'line-join': 'round' },
+          paint: { 'line-color': '#ff4fa3', 'line-width': 2.4, 'line-opacity': 0.92 },
+        })
 
-      mapReadyRef.current = true
-      const initialIndex = activeRef.current
-      updateMarkerStates(initialIndex)
-      ;(mapInstance.getSource(VISITED_SOURCE) as GeoJSONSource).setData(routeFeature(route.slice(0, initialIndex + 1)))
-      moveCamera(initialIndex, true)
-    })
+        mapReadyRef.current = true
+        const initialIndex = activeRef.current
+        updateMarkerStates(initialIndex)
+        ;(mapInstance.getSource(VISITED_SOURCE) as GeoJSONSource).setData(routeFeature(route.slice(0, initialIndex + 1)))
+        moveCamera(initialIndex, true)
+      })
 
       resizeObserver = new ResizeObserver(() => mapInstance.resize())
       resizeObserver.observe(container.current)
