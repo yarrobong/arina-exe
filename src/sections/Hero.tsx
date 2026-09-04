@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { assetUrl } from '../utils/assetUrl'
 
 const slides = [
   '/media/evolution/arina-18.webp',
@@ -25,6 +26,7 @@ export function Hero() {
 function HeroSlide({ src, index, track }: { src: string; index: number; track: React.RefObject<HTMLDivElement | null> }) {
   const slideRef = useRef<HTMLDivElement>(null)
   const [shouldLoad, setShouldLoad] = useState(index === 0)
+  const resolvedSrc = assetUrl(src)
 
   useEffect(() => {
     if (shouldLoad || !slideRef.current || !track.current) return
@@ -47,7 +49,7 @@ function HeroSlide({ src, index, track }: { src: string; index: number; track: R
     <div ref={slideRef} className="hero__slide" style={{ '--hero-delay': `${index * 80}ms` } as React.CSSProperties}>
       {shouldLoad && (
         <img
-          src={src}
+          src={resolvedSrc}
           alt="Арина"
           loading={index === 0 ? 'eager' : 'lazy'}
           decoding="async"
