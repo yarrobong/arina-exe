@@ -52,19 +52,17 @@ export const MusicDock = forwardRef<MusicDockHandle>(function MusicDock(_, ref) 
     resetTimeline()
   }
 
-  const next = () => {
+  const moveTrack = (direction: -1 | 1, continuePlaying = playing) => {
+    const nextIndex = (index + direction + tracks.length) % tracks.length
+    requestedTrack.current = continuePlaying ? tracks[nextIndex].id : null
     releaseAudio()
     setPlaying(false)
     setShowPrompt(false)
-    setIndex((i) => (i + 1) % tracks.length)
+    setIndex(nextIndex)
   }
 
-  const prev = () => {
-    releaseAudio()
-    setPlaying(false)
-    setShowPrompt(false)
-    setIndex((i) => (i - 1 + tracks.length) % tracks.length)
-  }
+  const next = () => moveTrack(1)
+  const prev = () => moveTrack(-1)
 
   const playCurrent = async () => {
     if (!hasAudio || !audio.current) return
@@ -87,6 +85,7 @@ export const MusicDock = forwardRef<MusicDockHandle>(function MusicDock(_, ref) 
 
     const wasPlaying = playing
     if (nextIndex === index) {
+      requestedTrack.current = null
       setShowPrompt(false)
       return
     }
@@ -107,12 +106,18 @@ export const MusicDock = forwardRef<MusicDockHandle>(function MusicDock(_, ref) 
     const nextIndex = tracks.findIndex((item) => item.id === trackId)
     if (nextIndex < 0) return
 
-    requestedTrack.current = trackId
     releaseAudio()
     setPlaying(false)
     setShowPrompt(false)
+
+    if (nextIndex === index) {
+      requestedTrack.current = null
+      void playCurrent()
+      return
+    }
+
+    requestedTrack.current = trackId
     setIndex(nextIndex)
-    if (nextIndex === index) void playCurrent()
   }
 
   useImperativeHandle(ref, () => ({ selectTrack, playTrack }), [hasAudio, index, playing])
@@ -130,6 +135,7 @@ export const MusicDock = forwardRef<MusicDockHandle>(function MusicDock(_, ref) 
   const toggle = async () => {
     if (!hasAudio || !audio.current) return
     if (playing) {
+      requestedTrack.current = null
       audio.current.pause()
       setPlaying(false)
     } else {
@@ -146,7 +152,7 @@ export const MusicDock = forwardRef<MusicDockHandle>(function MusicDock(_, ref) 
       <audio
         ref={audio}
         preload="none"
-        onEnded={next}
+        onEnded={() => moveTrack(1, true)}
         onPlay={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
         onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime || 0)}
