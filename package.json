@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && node scripts/optimize-deploy-media.mjs && node scripts/prune-deploy-assets.mjs",
+    "build": "node scripts/verify-media-references.mjs && tsc -b && vite build && node scripts/optimize-deploy-media.mjs && node scripts/prune-deploy-assets.mjs",
     "preview": "vite preview",
     "deploy": "npx wrangler deploy",
+    "verify-media": "node scripts/verify-media-references.mjs",
     "optimize-media": "node scripts/optimize-media.mjs",
     "optimize-media:existing": "node scripts/optimize-media.mjs --existing"
   },
