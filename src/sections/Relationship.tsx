@@ -3,6 +3,7 @@ import { motion, useScroll } from 'motion/react'
 import { RelationshipIntro } from '../components/RelationshipIntro'
 import { RelationshipTimeline } from '../components/RelationshipTimeline'
 import { relationshipTimeline } from '../content/relationship'
+import '../styles/relationship-density.css'
 
 export function Relationship({ anchorId = 'relationship' }: { anchorId?: string | null }) {
   const sectionRef = useRef<HTMLElement>(null)
