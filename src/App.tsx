@@ -89,7 +89,7 @@ export default function App() {
         <LazySection id="friends" minHeight="1600px">
           <DeferredFriends anchorId={null} />
         </LazySection>
-        <LazySection id="relationship" minHeight="calc(453svh + 4700px)">
+        <LazySection id="relationship" minHeight="1800px">
           <DeferredRelationship anchorId={null} />
         </LazySection>
         <LazySection id="facts" minHeight="560px">
