@@ -1,12 +1,13 @@
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { eras } from '../content/biography'
+import { assetUrl } from '../utils/assetUrl'
 
 const tracks = eras.map((era) => ({
   id: era.id,
   era: era.eyebrow,
   title: era.song?.title ?? `Песня главы · ${era.title}`,
   artist: era.song?.artist ?? 'добавим позже',
-  src: era.song?.src ?? '',
+  src: era.song?.src ? assetUrl(era.song.src) : '',
 }))
 
 export type MusicDockHandle = {
