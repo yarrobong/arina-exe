@@ -139,7 +139,7 @@ export function MemoryFragmentSummary() {
   const completed = recovered.size === memoryFragments.length
 
   return (
-    <div className={`memory-fragment-summary${completed ? ' is-complete' : ''}`}>
+    <div className={`memory-fragment-summary${completed ? ' is-complete' : ''}`} aria-live="polite">
       <div>
         <span>MEMORIES RECOVERED</span>
         <strong>{recovered.size} / {memoryFragments.length}</strong>
@@ -148,6 +148,13 @@ export function MemoryFragmentSummary() {
         {memoryFragments.map((fragment) => <i className={recovered.has(fragment.id) ? 'is-found' : ''} key={fragment.id} />)}
       </div>
       <small>{completed ? 'ARCHIVE COMPLETE ✦' : 'маленькие ✦ спрятаны внутри истории'}</small>
+      {completed && (
+        <div className="memory-fragment-summary__unlock">
+          <span>FULL MEMORY ACCESS</span>
+          <strong>7 / 7 FRAGMENTS RECOVERED</strong>
+          <small>все скрытые фрагменты памяти восстановлены</small>
+        </div>
+      )}
     </div>
   )
 }
