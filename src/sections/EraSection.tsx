@@ -1,6 +1,7 @@
 import { CourseVideo } from '../components/CourseVideo'
 import { ScrollaroidGallery } from '../components/ScrollaroidGallery'
 import { StyleAnomaly } from '../components/StyleAnomaly'
+import { VideoArchive } from '../components/VideoArchive'
 import type { Era } from '../content/types'
 
 export function EraSection({ era, onPlay, anchorId = era.id }: { era: Era; onPlay: (trackId: string) => void; anchorId?: string | null }) {
@@ -22,6 +23,7 @@ export function EraSection({ era, onPlay, anchorId = era.id }: { era: Era; onPla
       <div className="era-section__years">{era.years}</div>
       <h2>{era.title}</h2>
       <p className="era-section__story">{era.story}</p>
+      {era.id === 'childhood' && <VideoArchive />}
       {era.id === 'school-5-9' && (
         <StyleAnomaly
           title="GRAPHIC BROWS"
