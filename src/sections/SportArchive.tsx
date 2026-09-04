@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { motion, useMotionValueEvent, useScroll, useTransform } from 'motion/react'
+import { motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from 'motion/react'
 import type { MotionValue } from 'motion/react'
+import '../styles/sport-polish.css'
 
 const ROUTE_D = 'M 78 16 C 206 58 238 108 158 162 C 76 218 88 268 210 312 C 278 336 246 386 164 420 C 76 452 64 506 132 548 C 160 566 168 591 158 610'
 
@@ -22,14 +23,12 @@ function RouteCheckpoint({
   const opacity = useTransform(scrollYProgress, [progress - 0.08, progress, progress + 0.06], [0.18, 1, 1])
 
   return (
-    <>
-      <motion.g style={{ opacity }}>
-        <circle cx={x} cy={y} r="5" fill="#09090d" stroke="#f7b8d5" strokeWidth="1" />
-        <circle cx={x} cy={y} r="1.7" fill="#ff4fa3" />
-        <text className="sport-scene__checkpoint-tag" x={x + 10} y={y - 2}>{tag}</text>
-        <text className="sport-scene__checkpoint-label" x={x + 10} y={y + 10}>{label}</text>
-      </motion.g>
-    </>
+    <motion.g style={{ opacity }}>
+      <circle cx={x} cy={y} r="5" fill="#09090d" stroke="#f7b8d5" strokeWidth="1" />
+      <circle cx={x} cy={y} r="1.7" fill="#ff4fa3" />
+      <text className="sport-scene__checkpoint-tag" x={x + 10} y={y - 2}>{tag}</text>
+      <text className="sport-scene__checkpoint-label" x={x + 10} y={y + 10}>{label}</text>
+    </motion.g>
   )
 }
 
@@ -37,20 +36,31 @@ export function SportArchive({ anchorId = 'sport' }: { anchorId?: string | null 
   const sceneRef = useRef<HTMLDivElement>(null)
   const routeRef = useRef<SVGPathElement>(null)
   const [marker, setMarker] = useState({ x: 78, y: 16 })
+  const reduceMotion = useReducedMotion()
   const { scrollYProgress } = useScroll({
     target: sceneRef,
     offset: ['start 58px', 'end 100%'],
   })
-  const routeProgress = useTransform(scrollYProgress, (value) => Math.min(1, Math.max(0, value / 0.58)))
+
+  // The trail finishes first. Everything after 50% is the emotional aftermath.
+  const routeProgress = useTransform(scrollYProgress, (value) => Math.min(1, Math.max(0, value / 0.5)))
   const routeLength = useTransform(routeProgress, [0, 1], [0, 1])
-  const statusOpacity = useTransform(scrollYProgress, [0.54, 0.6, 0.66, 0.7], [0, 1, 1, 0])
-  const statusY = useTransform(scrollYProgress, [0.54, 0.62, 0.7], [12, 0, -8])
-  const questionOpacity = useTransform(scrollYProgress, [0.7, 0.77, 0.83], [0, 1, 1])
-  const questionY = useTransform(scrollYProgress, [0.7, 0.77], [16, 0])
-  const quoteOpacity = useTransform(scrollYProgress, [0.76, 0.83, 0.9], [0, 1, 1])
-  const quoteScale = useTransform(scrollYProgress, [0.76, 0.84], [0.94, 1])
-  const responseOpacity = useTransform(scrollYProgress, [0.9, 0.96, 1], [0, 1, 1])
-  const markerGlow = useTransform(scrollYProgress, [0.52, 0.6, 0.76], [1, 1, 0.34])
+  const routeOpacity = useTransform(scrollYProgress, [0.48, 0.56, 0.76], [1, 0.7, 0.34])
+  const quietOpacity = useTransform(scrollYProgress, [0.49, 0.525, 0.575, 0.61], [0, 0.92, 0.92, 0])
+
+  // Beat 1: route ends. Beat 2: discontinued appears. Beat 3: current Arina. Beat 4: Arina 10.0.
+  const statusOpacity = useTransform(scrollYProgress, [0.59, 0.625, 0.695, 0.735], [0, 1, 1, 0])
+  const statusY = useTransform(scrollYProgress, [0.59, 0.625, 0.735], [12, 0, -8])
+  const questionOpacity = useTransform(scrollYProgress, [0.745, 0.785, 1], [0, 1, 1])
+  const questionY = useTransform(scrollYProgress, [0.745, 0.79], [15, 0])
+  const quoteOpacity = useTransform(scrollYProgress, [0.805, 0.845, 1], [0, 1, 1])
+  const quoteScale = useTransform(scrollYProgress, [0.805, 0.85], [0.96, 1])
+  const responseOpacity = useTransform(scrollYProgress, [0.92, 0.965, 1], [0, 1, 1])
+  const responseY = useTransform(scrollYProgress, [0.92, 0.965], [10, 0])
+  const markerGlow = useTransform(scrollYProgress, [0.46, 0.51, 0.61, 0.76], [1, 1, 0.48, 0.24])
+  const endPulseOpacity = useTransform(scrollYProgress, [0.485, 0.51, 0.565, 0.61], [0, 1, 0.45, 0])
+  const endPulseScale = useTransform(scrollYProgress, [0.49, 0.58], [0.7, 2.2])
+  const cueOpacity = useTransform(scrollYProgress, [0, 0.44, 0.52], [1, 1, 0])
 
   useMotionValueEvent(routeProgress, 'change', (progress) => {
     const path = routeRef.current
@@ -92,7 +102,13 @@ export function SportArchive({ anchorId = 'sport' }: { anchorId?: string | null 
           </div>
 
           <div className="sport-scene__route-wrap">
-            <svg className="sport-scene__route" viewBox="0 0 320 620" role="img" aria-label="Стилизованная лыжная трасса Арины">
+            <motion.svg
+              className="sport-scene__route"
+              viewBox="0 0 320 620"
+              role="img"
+              aria-label="Стилизованная лыжная трасса Арины"
+              style={{ opacity: reduceMotion ? 0.72 : routeOpacity }}
+            >
               <defs>
                 <filter id="sport-route-glow" x="-50%" y="-50%" width="200%" height="200%">
                   <feGaussianBlur stdDeviation="3.5" result="blur" />
@@ -118,7 +134,16 @@ export function SportArchive({ anchorId = 'sport' }: { anchorId?: string | null 
               </motion.g>
               {checkpoints.map((checkpoint) => <RouteCheckpoint key={checkpoint.tag} {...checkpoint} scrollYProgress={scrollYProgress} />)}
               <circle className="sport-scene__route-end" cx="158" cy="610" r="4" />
-            </svg>
+              <motion.circle
+                className="sport-scene__route-end-pulse"
+                cx="158"
+                cy="610"
+                r="8"
+                style={{ opacity: endPulseOpacity, scale: endPulseScale, transformOrigin: '158px 610px' }}
+              />
+            </motion.svg>
+
+            <motion.div className="sport-scene__quiet" style={{ opacity: quietOpacity }} aria-hidden="true" />
 
             <motion.div className="sport-scene__status" style={{ opacity: statusOpacity, y: statusY }} aria-live="polite">
               <span>SPORT BUILD</span>
@@ -129,14 +154,14 @@ export function SportArchive({ anchorId = 'sport' }: { anchorId?: string | null 
             <motion.div className="sport-scene__dialog" style={{ opacity: questionOpacity, y: questionY }}>
               <span>Что бы Арина сказала себе в 10 лет?</span>
               <motion.p style={{ opacity: quoteOpacity, scale: quoteScale }}>«Не бросай спорт.»</motion.p>
-              <motion.div className="sport-scene__response" style={{ opacity: responseOpacity }}>
+              <motion.div className="sport-scene__response" style={{ opacity: responseOpacity, y: responseY }}>
                 <small>ARINA 10.0 RESPONSE:</small>
                 <p>«Ты чё не стала олимпийской чемпионкой?»</p>
               </motion.div>
             </motion.div>
           </div>
 
-          <div className="sport-scene__cue" aria-hidden="true"><i>↓</i> прокрути, чтобы продолжить</div>
+          <motion.div className="sport-scene__cue" style={{ opacity: cueOpacity }} aria-hidden="true"><i>↓</i> прокрути, чтобы продолжить</motion.div>
         </div>
 
         <div className="sport-scene__steps" aria-hidden="true">
