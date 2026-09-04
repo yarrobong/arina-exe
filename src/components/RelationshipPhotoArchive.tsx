@@ -54,6 +54,12 @@ export function RelationshipPhotoArchive({ photos }: RelationshipPhotoArchivePro
     setStackFinished(true)
   }
 
+  const restartStack = () => {
+    setSwipeDirection(-1)
+    setStackIndex(0)
+    setStackFinished(false)
+  }
+
   return (
     <div className="relationship-photo-archive">
       <div className="relationship-photo-archive__topline">
@@ -130,13 +136,13 @@ export function RelationshipPhotoArchive({ photos }: RelationshipPhotoArchivePro
       <div className="relationship-photo-stack__controls">
         <button type="button" onClick={previous} disabled={!stackFinished && stackIndex === 0}>←</button>
         <div>
-          <span>{stackFinished ? '04 / 04' : `${String(stackIndex + 1).padStart(2, '0')} / ${String(stackPhotos.length).padStart(2, '0')}`}</span>
+          <span>{stackFinished ? `${String(stackPhotos.length).padStart(2, '0')} / ${String(stackPhotos.length).padStart(2, '0')}` : `${String(stackIndex + 1).padStart(2, '0')} / ${String(stackPhotos.length).padStart(2, '0')}`}</span>
           <small>{stackFinished ? 'stack recovered' : 'свайпни верхний кадр'}</small>
         </div>
         {!stackFinished ? (
           <button type="button" onClick={() => advance(1)}>→</button>
         ) : (
-          <button type="button" onClick={() => setStackFinished(false)}>↺</button>
+          <button type="button" onClick={restartStack} aria-label="Начать стопку заново">↺</button>
         )}
       </div>
 
