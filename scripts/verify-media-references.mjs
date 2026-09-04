@@ -19,9 +19,10 @@ async function walk(dir) {
 const references = new Map()
 for (const file of await walk(srcDir)) {
   const content = await fs.readFile(file, 'utf8')
-  const pattern = /['"`](\/media\/[^'"`]+)['"`]/g
+  const pattern = /(['"`])(\/media\/.*?)\1/g
   for (const match of content.matchAll(pattern)) {
-    const reference = match[1].split(/[?#]/, 1)[0]
+    const reference = match[2].split(/[?#]/, 1)[0]
+    if (reference.includes('${')) continue
     if (!references.has(reference)) references.set(reference, [])
     references.get(reference).push(path.relative(process.cwd(), file))
   }
@@ -44,4 +45,4 @@ if (missing.length > 0) {
   process.exit(1)
 }
 
-console.log(`[verify-media] OK: ${references.size} referenced media file(s) exist`)
+console.log(`[verify-media] OK: ${references.size} static media reference(s) exist`)
