@@ -17,8 +17,13 @@ async function walk(dir) {
   return files
 }
 
-// Raw staging material should never be part of the production site.
-await rm(path.join(distDir, 'media', 'unused'), { recursive: true, force: true })
+// Raw/staging material should never be part of the production site.
+for (const relative of [
+  ['media', 'unused'],
+  ['media', 'разбери и не удаляй'],
+]) {
+  await rm(path.join(distDir, ...relative), { recursive: true, force: true })
+}
 
 let removed = 0
 for (const file of await walk(distDir)) {
