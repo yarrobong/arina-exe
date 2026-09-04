@@ -95,7 +95,7 @@ export default function App() {
         <LazySection id="facts" minHeight="560px">
           <DeferredFacts anchorId={null} />
         </LazySection>
-        <LazySection id="inventory" minHeight="620px">
+        <LazySection id="inventory" minHeight="920px">
           <DeferredInventory anchorId={null} />
         </LazySection>
         <LazySection id="compromat" minHeight="540px">
