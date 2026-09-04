@@ -36,16 +36,38 @@ export function LazySection({
 
   useEffect(() => {
     if (!id || !wasTargeted || decodeURIComponent(window.location.hash.slice(1)) !== id) return
-    const settle = () => ref.current?.scrollIntoView({ block: 'start', behavior: 'auto' })
-    const timers = [100, 500, 1200].map((delay) => window.setTimeout(settle, delay))
-    const resizeObserver = 'ResizeObserver' in window ? new ResizeObserver(settle) : null
-    resizeObserver?.observe(document.documentElement)
-    const stopObserving = window.setTimeout(() => resizeObserver?.disconnect(), 3200)
+
+    let cancelled = false
+    let resizeObserver: ResizeObserver | null = null
+    const timers: number[] = []
+
+    const settle = () => {
+      if (!cancelled) ref.current?.scrollIntoView({ block: 'start', behavior: 'auto' })
+    }
+
+    const stopSettling = () => {
+      if (cancelled) return
+      cancelled = true
+      timers.forEach((timer) => window.clearTimeout(timer))
+      resizeObserver?.disconnect()
+    }
+
+    timers.push(...[80, 320, 800].map((delay) => window.setTimeout(settle, delay)))
+    resizeObserver = 'ResizeObserver' in window ? new ResizeObserver(settle) : null
+    if (ref.current) resizeObserver?.observe(ref.current)
+    timers.push(window.setTimeout(stopSettling, 1600))
+
+    window.addEventListener('touchstart', stopSettling, { passive: true, once: true })
+    window.addEventListener('wheel', stopSettling, { passive: true, once: true })
+    window.addEventListener('pointerdown', stopSettling, { passive: true, once: true })
+    window.addEventListener('keydown', stopSettling, { once: true })
 
     return () => {
-      timers.forEach((timer) => window.clearTimeout(timer))
-      window.clearTimeout(stopObserving)
-      resizeObserver?.disconnect()
+      stopSettling()
+      window.removeEventListener('touchstart', stopSettling)
+      window.removeEventListener('wheel', stopSettling)
+      window.removeEventListener('pointerdown', stopSettling)
+      window.removeEventListener('keydown', stopSettling)
     }
   }, [id, ref, wasTargeted])
 
