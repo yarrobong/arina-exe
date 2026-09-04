@@ -77,7 +77,7 @@ async function optimizeAudio() {
   }
 }
 
-async function optimizeMutedWebm(relativePath, maxWidth) {
+async function optimizeWebm(relativePath, maxWidth, { muted = false, crf = 37 } = {}) {
   const file = path.join(distDir, relativePath)
   try {
     const info = await fs.stat(file)
@@ -86,16 +86,20 @@ async function optimizeMutedWebm(relativePath, maxWidth) {
     return
   }
 
+  const audioArgs = muted
+    ? ['-an']
+    : ['-c:a', 'libopus', '-b:a', '96k']
+
   await transcode(file, [
-    '-an',
     '-vf', `scale=w='min(${maxWidth},iw)':h=-2`,
     '-c:v', 'libvpx-vp9',
-    '-crf', '37',
+    '-crf', String(crf),
     '-b:v', '0',
     '-deadline', 'good',
     '-cpu-used', '5',
     '-row-mt', '1',
     '-pix_fmt', 'yuv420p',
+    ...audioArgs,
   ])
 }
 
@@ -105,7 +109,8 @@ if (!ffmpegAvailable()) {
 }
 
 await optimizeAudio()
-await optimizeMutedWebm(path.join('media', 'childhood', 'baby-02.webm'), 720)
-await optimizeMutedWebm(path.join('media', 'friends', 'vadim.webm'), 640)
+await optimizeWebm(path.join('media', 'childhood', 'baby-02.webm'), 720, { muted: true, crf: 37 })
+await optimizeWebm(path.join('media', 'friends', 'vadim.webm'), 640, { muted: true, crf: 37 })
+await optimizeWebm(path.join('media', 'urfu', 'year-2.webm'), 720, { muted: false, crf: 35 })
 
 console.log(`[deploy] media optimization complete; optimized ${optimized} file(s), saved ${(savedBytes / 1024 / 1024).toFixed(1)} MiB`)
