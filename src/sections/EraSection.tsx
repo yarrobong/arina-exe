@@ -1,14 +1,23 @@
 import { CourseVideo } from '../components/CourseVideo'
+import { MemoryFragmentTrigger } from '../components/MemoryFragments'
 import { ScrollaroidGallery } from '../components/ScrollaroidGallery'
 import { StyleAnomaly } from '../components/StyleAnomaly'
 import { VideoArchive } from '../components/VideoArchive'
 import type { Era } from '../content/types'
 
+const eraFragments: Record<string, { id: string; placement: string }> = {
+  childhood: { id: 'childhood-barbie', placement: 'era-a' },
+  'school-5-9': { id: 'kazan-2023', placement: 'era-b' },
+  'urfu-1': { id: 'urfu-warm', placement: 'era-c' },
+}
+
 export function EraSection({ era, onPlay, anchorId = era.id }: { era: Era; onPlay: (trackId: string) => void; anchorId?: string | null }) {
   const galleryPhotos = era.photos.filter((photo) => photo.src !== '/media/school/5-9/brows.webp')
+  const memoryFragment = eraFragments[era.id]
 
   return (
     <section className="era-section" id={anchorId ?? undefined}>
+      {memoryFragment && <MemoryFragmentTrigger id={memoryFragment.id} placement={memoryFragment.placement} />}
       <div className="era-section__topline">
         <span>{era.eyebrow}</span>
         <button
