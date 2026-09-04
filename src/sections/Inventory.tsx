@@ -26,7 +26,7 @@ export function Inventory({ anchorId = 'inventory' }: { anchorId?: string | null
 
       <div className="inventory-archive__grid">
         {inventory.map((item, index) => (
-          <InventoryItemCard item={item} index={index} key={item.id} />
+          <InventoryItemCard item={item} index={index} total={inventory.length} key={item.id} />
         ))}
       </div>
 
