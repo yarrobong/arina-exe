@@ -125,7 +125,7 @@ export function VideoArchive() {
               muted
               playsInline
               loop
-              preload="metadata"
+              preload="none"
               onClick={() => setIsPlaying((value) => !value)}
               onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
               aria-label={activeTape.title}
