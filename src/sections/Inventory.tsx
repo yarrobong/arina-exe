@@ -1,6 +1,7 @@
 import { InventoryItemCard } from '../components/InventoryItemCard'
-import { inventory } from '../content/inventory'
+import { MemoryFragmentTrigger } from '../components/MemoryFragments'
 import { SectionHeading } from '../components/SectionHeading'
+import { inventory } from '../content/inventory'
 import '../styles/inventory-archive.css'
 
 export function Inventory({ anchorId = 'inventory' }: { anchorId?: string | null }) {
@@ -8,6 +9,7 @@ export function Inventory({ anchorId = 'inventory' }: { anchorId?: string | null
 
   return (
     <section className="section-shell content-visibility-section inventory-archive" id={anchorId ?? undefined}>
+      <MemoryFragmentTrigger id="kindergarten-bear" placement="inventory" />
       <SectionHeading
         eyebrow="Inventory"
         title="Вещи Арины"
