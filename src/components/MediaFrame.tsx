@@ -3,6 +3,7 @@ import { motion } from 'motion/react'
 
 export function MediaFrame({ src, alt, caption, date, tilt = 0 }: { src: string; alt: string; caption?: string; date?: string; tilt?: number }) {
   const [broken, setBroken] = useState(false)
+  const isVideo = src.toLowerCase().endsWith('.webm')
   return (
     <motion.figure
       className="media-frame"
@@ -13,7 +14,13 @@ export function MediaFrame({ src, alt, caption, date, tilt = 0 }: { src: string;
     >
       <div className="media-frame__image">
         {!broken ? (
-          <img src={src} alt={alt} loading="lazy" onError={() => setBroken(true)} />
+          isVideo ? (
+            <video autoPlay loop muted playsInline preload="metadata" aria-label={alt} onError={() => setBroken(true)}>
+              <source src={src} type="video/webm" />
+            </video>
+          ) : (
+            <img src={src} alt={alt} loading="lazy" onError={() => setBroken(true)} />
+          )
         ) : (
           <div className="media-placeholder" aria-label={alt}>
             <small>{src.split('/').at(-1)}</small>

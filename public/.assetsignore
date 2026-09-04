@@ -1,6 +1,3 @@
 # Files above Cloudflare Workers Static Assets 25 MiB per-file limit.
 # Keep the originals in Git, but do not upload them as production assets.
-media/childhood/baby-02.gif
-media/friends/vadim.gif
-media/urfu/year-2.gif
 media/разбери и не удаляй/9122ca13080f48549f667b16be92e779.MOV
