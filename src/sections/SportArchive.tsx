@@ -7,9 +7,9 @@ const ROUTE_D = 'M 78 16 C 206 58 238 108 158 162 C 76 218 88 268 210 312 C 278 
 
 const checkpoints = [
   { progress: 0.03, x: 78, y: 16, tag: 'START', label: 'детство' },
-  { progress: 0.25, x: 158, y: 162, tag: 'TRAINING', label: 'лыжный спорт' },
-  { progress: 0.5, x: 210, y: 312, tag: 'SPORT BUILD', label: 'active' },
-  { progress: 0.74, x: 76, y: 452, tag: '12–14', label: 'спортсменка' },
+  { progress: 0.16, x: 158, y: 162, tag: 'TRAINING', label: 'лыжный спорт' },
+  { progress: 0.29, x: 210, y: 312, tag: 'SPORT BUILD', label: 'active' },
+  { progress: 0.42, x: 76, y: 452, tag: '12–14', label: 'спортсменка' },
 ]
 
 function RouteCheckpoint({
@@ -20,7 +20,7 @@ function RouteCheckpoint({
   tag,
   label,
 }: (typeof checkpoints)[number] & { scrollYProgress: MotionValue<number> }) {
-  const opacity = useTransform(scrollYProgress, [progress - 0.08, progress, progress + 0.06], [0.18, 1, 1])
+  const opacity = useTransform(scrollYProgress, [progress - 0.055, progress, progress + 0.045], [0.18, 1, 1])
 
   return (
     <motion.g style={{ opacity }}>
