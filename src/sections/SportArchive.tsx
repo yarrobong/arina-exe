@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from 'motion/react'
 import type { MotionValue } from 'motion/react'
+import { MemoryFragmentTrigger } from '../components/MemoryFragments'
 import '../styles/sport-polish.css'
 
 const ROUTE_D = 'M 78 16 C 206 58 238 108 158 162 C 76 218 88 268 210 312 C 278 336 246 386 164 420 C 76 452 64 506 132 548 C 160 566 168 591 158 610'
@@ -78,6 +79,7 @@ export function SportArchive({ anchorId = 'sport' }: { anchorId?: string | null 
 
   return (
     <section className="sport-scene" id={anchorId ?? undefined}>
+      <MemoryFragmentTrigger id="sport-build" placement="sport" />
       <motion.header
         className="sport-scene__intro"
         initial={{ opacity: 0, y: 22 }}
