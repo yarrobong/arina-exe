@@ -7,11 +7,12 @@ import { LazyVideo } from './LazyVideo'
 type PersonArchiveCardProps = {
   person: Person
   index: number
+  total: number
 }
 
 const mediaKind = (src?: string) => src?.toLowerCase().endsWith('.webm') ? 'VIDEO' : src ? 'PHOTO' : 'PHOTO SLOT'
 
-export function PersonArchiveCard({ person, index }: PersonArchiveCardProps) {
+export function PersonArchiveCard({ person, index, total }: PersonArchiveCardProps) {
   const reduceMotion = useReducedMotion()
   const [open, setOpen] = useState(false)
   const [mediaFailed, setMediaFailed] = useState(false)
@@ -85,7 +86,7 @@ export function PersonArchiveCard({ person, index }: PersonArchiveCardProps) {
             exit={reduceMotion ? { opacity: 0 } : { opacity: 0, height: 0, y: -4 }}
             transition={{ duration: reduceMotion ? 0 : 0.28, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div><span>ARCHIVE ENTRY</span><strong>{String(index + 1).padStart(2, '0')} / 12</strong></div>
+            <div><span>ARCHIVE ENTRY</span><strong>{String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</strong></div>
             <div><span>GROUP</span><strong>{person.category}</strong></div>
             <div><span>MEDIA</span><strong>{hasMedia ? kind : 'AWAITING PHOTO'}</strong></div>
           </motion.div>
