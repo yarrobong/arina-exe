@@ -1,4 +1,5 @@
 import { lazy, useEffect, useRef } from 'react'
+import { BootSequence, ChapterBridge, LifeTimeline, UniversityProfile } from './components/ExperiencePolish'
 import { LazySection } from './components/LazySection'
 import { MemoryFragmentProvider, MemoryFragmentSummary } from './components/MemoryFragments'
 import { MusicDock, type MusicDockHandle } from './components/MusicDock'
@@ -54,8 +55,10 @@ export default function App() {
     <MemoryFragmentProvider>
       <div className="desktop-stage">
         <main className="site-shell">
+          <BootSequence />
           <TopNav />
           <Hero />
+          <LifeTimeline />
 
           <LazySection id={eras[0].id} musicChapter={eras[0].id} minHeight={eraMinHeight(eras[0].photos.length)}>
             <DeferredEraSection era={eras[0]} onPlay={playChapter} anchorId={null} />
@@ -79,10 +82,13 @@ export default function App() {
             <DeferredEraSection era={eras[3]} onPlay={playChapter} anchorId={null} />
           </LazySection>
 
+          <ChapterBridge from="SCHOOL ARCHIVE CLOSED" to="UNIVERSITY.EXE" href="#university" note="NEXT CHAPTER" />
+
           <section className="university-anchor">
             <LazySection id="university" musicChapter={eras[4].id} minHeight={eraMinHeight(eras[4].photos.length)}>
               <DeferredEraSection era={eras[4]} onPlay={playChapter} anchorId={null} />
             </LazySection>
+            <UniversityProfile />
             <LazySection musicChapter={eras[5].id} minHeight={eraMinHeight(eras[5].photos.length)}>
               <DeferredEraSection era={eras[5]} onPlay={playChapter} anchorId={null} />
             </LazySection>
@@ -91,9 +97,11 @@ export default function App() {
           <LazySection id="friends" minHeight="1600px">
             <DeferredFriends anchorId={null} />
           </LazySection>
+          <ChapterBridge from="PEOPLE INDEXED" to="RELATIONSHIP.LOG" href="#relationship" />
           <LazySection id="relationship" minHeight="1800px">
             <DeferredRelationship anchorId={null} />
           </LazySection>
+          <ChapterBridge from="RELATIONSHIP LOG SAVED" to="SYSTEM INFO" href="#facts" />
           <LazySection id="facts" minHeight="560px">
             <DeferredFacts anchorId={null} />
           </LazySection>
