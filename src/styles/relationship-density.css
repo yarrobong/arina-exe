@@ -1,0 +1,118 @@
+.relationship {
+  padding-top: 30px;
+}
+
+/* Keep the intro cinematic, but remove the old long empty runway. */
+.relationship-intro {
+  min-height: 88svh;
+  padding-top: 4svh;
+}
+
+.relationship-intro__heading {
+  min-height: 220px;
+  margin-top: 14svh;
+}
+
+.relationship-progress {
+  margin-bottom: 26px;
+}
+
+/* Default timeline beats should read quickly; the major scenes get their own space below. */
+.relationship-event {
+  padding-bottom: 54px;
+}
+
+.relationship-event--connection,
+.relationship-event--call,
+.relationship-event--idle,
+.relationship-event--media {
+  padding-bottom: 42px;
+}
+
+.relationship-event--meetup {
+  padding-bottom: 50px;
+}
+
+.relationship-event--tarot {
+  padding-bottom: 62px;
+}
+
+.relationship-event--first-meetup {
+  padding-bottom: 68px;
+}
+
+.relationship-event--archive {
+  padding-bottom: 82px;
+}
+
+/* One long atmospheric scene, not an oversized scroll tunnel. */
+.relationship-event--night {
+  padding-bottom: 66px;
+}
+
+.night-chat {
+  height: 150svh;
+  margin-top: 20px;
+}
+
+/* Theater keeps the seat-change reveal, but reaches it sooner. */
+.theater-memory {
+  height: 120svh;
+  margin-top: 22px;
+}
+
+/* Quiet beats should feel quieter than the hero interactions. */
+.relationship-event--idle .idle-signal {
+  padding-block: 18px;
+}
+
+.relationship-event--media .media-exchange > div {
+  padding-block: 11px;
+}
+
+.relationship-event--media .media-exchange div i {
+  margin-bottom: 9px;
+}
+
+.relationship-event--connection .connection-route {
+  margin-top: 20px;
+  padding: 13px;
+}
+
+.relationship-event--call .voice-call {
+  padding: 12px;
+}
+
+@media (max-height: 720px) {
+  .relationship-intro {
+    min-height: 82svh;
+  }
+
+  .relationship-intro__heading {
+    min-height: 190px;
+    margin-top: 10svh;
+  }
+
+  .night-chat {
+    height: 142svh;
+  }
+
+  .theater-memory {
+    height: 116svh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .night-chat,
+  .theater-memory {
+    height: auto;
+    min-height: 72svh;
+  }
+
+  .night-chat__sticky,
+  .theater-memory__sticky {
+    position: relative;
+    top: auto;
+    height: min(720px, calc(100svh - 110px));
+  }
+}
