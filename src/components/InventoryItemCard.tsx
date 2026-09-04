@@ -7,6 +7,7 @@ import { LazyImage } from './LazyImage'
 type InventoryItemCardProps = {
   item: InventoryItem
   index: number
+  total: number
 }
 
 function ItemMedia({ item, expanded = false }: { item: InventoryItem; expanded?: boolean }) {
@@ -38,7 +39,7 @@ function ItemMedia({ item, expanded = false }: { item: InventoryItem; expanded?:
   )
 }
 
-function ItemInspect({ item, onClose }: { item: InventoryItem; onClose: () => void }) {
+function ItemInspect({ item, total, onClose }: { item: InventoryItem; total: number; onClose: () => void }) {
   const reduceMotion = useReducedMotion()
   const closeRef = useRef<HTMLButtonElement>(null)
 
@@ -84,7 +85,7 @@ function ItemInspect({ item, onClose }: { item: InventoryItem; onClose: () => vo
         <div className="inventory-inspect__chrome">
           <span>ARINA.EXE / ITEM INSPECT</span>
           <i aria-hidden="true" />
-          <span>{String(item.slot).padStart(2, '0')} / 04</span>
+          <span>{String(item.slot).padStart(2, '0')} / {String(total).padStart(2, '0')}</span>
         </div>
 
         <button ref={closeRef} className="inventory-inspect__close" type="button" onClick={onClose} aria-label="Закрыть предмет">
@@ -122,7 +123,7 @@ function ItemInspect({ item, onClose }: { item: InventoryItem; onClose: () => vo
   )
 }
 
-export function InventoryItemCard({ item, index }: InventoryItemCardProps) {
+export function InventoryItemCard({ item, index, total }: InventoryItemCardProps) {
   const reduceMotion = useReducedMotion()
   const [open, setOpen] = useState(false)
 
@@ -153,7 +154,7 @@ export function InventoryItemCard({ item, index }: InventoryItemCardProps) {
         </button>
       </motion.article>
 
-      <AnimatePresence>{open && <ItemInspect item={item} onClose={() => setOpen(false)} />}</AnimatePresence>
+      <AnimatePresence>{open && <ItemInspect item={item} total={total} onClose={() => setOpen(false)} />}</AnimatePresence>
     </>
   )
 }
