@@ -21,6 +21,8 @@ async function walk(dir) {
 // The legacy "разбери и не удаляй" folder currently contains the Barbie image used by Evolution,
 // so it stays until that binary asset is moved to a production-named folder.
 await rm(path.join(distDir, 'media', 'unused'), { recursive: true, force: true })
+// The editable SVG source is kept in the repository; the UI ships its much smaller 1200px WebP.
+await rm(path.join(distDir, 'media', 'opera-ballet-map.svg'), { force: true })
 
 let removed = 0
 for (const file of await walk(distDir)) {

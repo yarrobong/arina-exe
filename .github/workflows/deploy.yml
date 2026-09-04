@@ -28,14 +28,19 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
-          node-version: lts/*
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Install media optimizer
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - name: Ensure media optimizer is available
+        run: |
+          if ! command -v ffmpeg >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq ffmpeg
+          fi
+          ffmpeg -version | sed -n '1p'
 
       - name: Build
         run: npm run build

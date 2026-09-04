@@ -1,7 +1,10 @@
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { createContext, lazy, Suspense, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { memoryFragments, type MemoryFragment } from '../content/memoryFragments'
 import '../styles/memory-fragments.css'
+
+const DeferredMemoryFragmentReveal = lazy(() => import('./MemoryFragmentReveal').then((module) => ({
+  default: module.MemoryFragmentReveal,
+})))
 
 type MemoryFragmentContextValue = {
   recovered: Set<string>
@@ -29,9 +32,9 @@ function loadRecovered() {
 }
 
 export function MemoryFragmentProvider({ children }: { children: ReactNode }) {
-  const reduceMotion = useReducedMotion()
   const [recovered, setRecovered] = useState<Set<string>>(() => new Set())
   const [active, setActive] = useState<MemoryFragment | null>(null)
+  const [hasRequestedReveal, setHasRequestedReveal] = useState(false)
 
   useEffect(() => {
     setRecovered(loadRecovered())
@@ -63,13 +66,17 @@ export function MemoryFragmentProvider({ children }: { children: ReactNode }) {
 
   const open = (id: string) => {
     const fragment = memoryFragments.find((item) => item.id === id)
-    if (fragment) setActive(fragment)
+    if (fragment) {
+      setHasRequestedReveal(true)
+      setActive(fragment)
+    }
   }
 
   const recover = (id: string) => {
     const fragment = memoryFragments.find((item) => item.id === id)
     if (!fragment) return
 
+    setHasRequestedReveal(true)
     setRecovered((current) => {
       if (current.has(id)) return current
       const next = new Set(current)
@@ -91,36 +98,16 @@ export function MemoryFragmentProvider({ children }: { children: ReactNode }) {
   return (
     <MemoryFragmentContext.Provider value={value}>
       {children}
-      <AnimatePresence>
-        {active && (
-          <motion.div
-            className="memory-fragment-reveal"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Найден фрагмент воспоминания"
-            initial={reduceMotion ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setActive(null)}
-          >
-            <motion.div
-              className="memory-fragment-reveal__card"
-              initial={reduceMotion ? false : { opacity: 0, y: 20, scale: 0.96, filter: 'blur(8px)' }}
-              animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-              exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 10, scale: 0.98 }}
-              transition={{ duration: reduceMotion ? 0 : 0.3, ease: [0.22, 1, 0.36, 1] }}
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="memory-fragment-reveal__chrome"><span>MEMORY FRAGMENT</span><i /><strong>{String(recovered.size).padStart(2, '0')} / {String(memoryFragments.length).padStart(2, '0')}</strong></div>
-              <div className="memory-fragment-reveal__symbol" aria-hidden="true">✦</div>
-              <small>{active.label}</small>
-              <p>{active.memory}</p>
-              <div className="memory-fragment-reveal__source">{active.source}</div>
-              <button type="button" onClick={() => setActive(null)}>RECOVERED ✓</button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {hasRequestedReveal && (
+        <Suspense fallback={null}>
+          <DeferredMemoryFragmentReveal
+            active={active}
+            recoveredCount={recovered.size}
+            totalCount={memoryFragments.length}
+            onDismiss={() => setActive(null)}
+          />
+        </Suspense>
+      )}
     </MemoryFragmentContext.Provider>
   )
 }

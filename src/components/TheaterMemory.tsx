@@ -20,7 +20,7 @@ export function TheaterMemory() {
           <strong>{upgraded ? 'ROW 01' : 'BACK ROW'}</strong>
         </div>
         <div className="theater-map" role="img" aria-label="Реальная схема зала оперы и балета с ложами и рядами">
-          <LazyImage src="/media/opera-ballet-map.svg" alt="Схема зала оперы и балета" />
+          <LazyImage src="/media/opera-ballet-map.webp" alt="Схема зала оперы и балета" />
           <svg className="theater-map__overlay" viewBox="0 0 100 100" aria-hidden="true">
             <motion.path
               d="M80 80 C68 61 47 45 23 23"

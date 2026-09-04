@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { TouchEvent } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useNearViewport } from '../hooks/useNearViewport'
-import { assetUrl } from '../utils/assetUrl'
+import { videoSources } from '../utils/videoSources'
 import '../styles/video-archive.css'
 
 type Tape = {
@@ -137,7 +137,6 @@ export function VideoArchive() {
           >
             <video
               ref={videoRef}
-              src={isActivated ? assetUrl(activeTape.src) : undefined}
               muted
               playsInline
               loop
@@ -145,7 +144,11 @@ export function VideoArchive() {
               onClick={togglePlayback}
               onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
               aria-label={activeTape.title}
-            />
+            >
+              {isActivated && videoSources(activeTape.src).map((source) => (
+                <source key={source.src} src={source.src} type={source.type} />
+              ))}
+            </video>
           </motion.div>
         </AnimatePresence>
 

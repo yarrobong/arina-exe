@@ -62,8 +62,12 @@ body::before {
 
 .site-shell::after {
   content: "";
-  position: absolute;
-  inset: 0;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: min(100vw, 480px);
+  transform: translateX(-50%);
   pointer-events: none;
   z-index: 40;
   opacity: .04;
@@ -90,7 +94,9 @@ body::before {
   font-size: 11px;
   letter-spacing: .04em;
   color: #dad9df;
+  transition: border-color .2s ease, background .2s ease, color .2s ease, box-shadow .2s ease;
 }
+.top-nav a.is-active { border-color: rgba(255,79,163,.72); background: rgba(255,79,163,.14); color: #fff; box-shadow: 0 0 14px rgba(255,79,163,.16); }
 
 .hero { min-height: 92svh; padding: 18px 16px 0; position: relative; display: flex; flex-direction: column; justify-content: flex-start; }
 .hero__slides { height: 68svh; display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; border-radius: 28px; }
@@ -596,6 +602,14 @@ body::before {
   .relationship-progress { -webkit-backdrop-filter: blur(10px) saturate(1.15); backdrop-filter: blur(10px) saturate(1.15); }
   .night-chat__phone { -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: 0 20px 42px rgba(0,0,0,.45), 0 0 22px rgba(255,79,163,.08), inset 0 0 0 4px rgba(255,255,255,.035); }
   .music-dock { -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: 0 10px 34px rgba(0,0,0,.5), 0 0 20px rgba(255,79,163,.09); }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .hero__counter,
+  .hero__swipe-hint { -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+  .memory-fragment-reveal { -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px); }
+  .life-map__completion,
+  .life-map__explore-toolbar { -webkit-backdrop-filter: blur(9px) saturate(1.1); backdrop-filter: blur(9px) saturate(1.1); }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNearViewport } from '../hooks/useNearViewport'
-import { assetUrl } from '../utils/assetUrl'
+import { videoSources } from '../utils/videoSources'
 
 type LazyVideoProps = {
   src: string
@@ -27,7 +27,7 @@ export function LazyVideo({
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isVisible, setIsVisible] = useState(false)
   const [isReady, setIsReady] = useState(false)
-  const resolvedSrc = assetUrl(src)
+  const sources = videoSources(src)
 
   useEffect(() => {
     const node = shellRef.current
@@ -56,12 +56,15 @@ export function LazyVideo({
     }
   }, [autoPlay, isNear, isVisible])
 
+  useEffect(() => {
+    if (isNear) videoRef.current?.load()
+  }, [isNear, src])
+
   return (
     <div ref={shellRef} className={`lazy-video${className ? ` ${className}` : ''}`}>
       {!isReady && <div className="lazy-video__placeholder" aria-hidden="true"><span>MEDIA</span></div>}
       <video
         ref={videoRef}
-        src={isNear ? resolvedSrc : undefined}
         autoPlay={autoPlay && isVisible}
         controls={controls}
         loop={loop}
@@ -72,6 +75,9 @@ export function LazyVideo({
         onLoadedData={() => setIsReady(true)}
         onError={onError}
       >
+        {isNear && sources.map((source) => (
+          <source key={source.src} src={source.src} type={source.type} />
+        ))}
         Ваш браузер не поддерживает воспроизведение видео.
       </video>
     </div>

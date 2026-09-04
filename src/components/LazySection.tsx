@@ -11,6 +11,15 @@ type LazySectionProps = {
   rootMargin?: string
 }
 
+function currentHashId() {
+  const hash = window.location.hash.slice(1)
+  try {
+    return decodeURIComponent(hash)
+  } catch {
+    return hash
+  }
+}
+
 export function LazySection({
   children,
   id,
@@ -21,13 +30,16 @@ export function LazySection({
 }: LazySectionProps) {
   const { ref, isNear } = useNearViewport<HTMLDivElement>({ rootMargin })
   const [wasTargeted, setWasTargeted] = useState(false)
+  const [targetAttempt, setTargetAttempt] = useState(0)
   const shouldMount = isNear || wasTargeted
   const style = { '--lazy-section-min-height': minHeight } as CSSProperties
 
   useEffect(() => {
     if (!id) return
     const checkHash = () => {
-      if (decodeURIComponent(window.location.hash.slice(1)) === id) setWasTargeted(true)
+      if (currentHashId() !== id) return
+      setWasTargeted(true)
+      setTargetAttempt((attempt) => attempt + 1)
     }
     checkHash()
     window.addEventListener('hashchange', checkHash)
@@ -35,33 +47,63 @@ export function LazySection({
   }, [id])
 
   useEffect(() => {
-    if (!id || !wasTargeted || decodeURIComponent(window.location.hash.slice(1)) !== id) return
+    if (!id || !wasTargeted || targetAttempt === 0 || currentHashId() !== id) return
 
     let cancelled = false
-    let resizeObserver: ResizeObserver | null = null
-    const timers: number[] = []
-
-    const settle = () => {
-      if (!cancelled) ref.current?.scrollIntoView({ block: 'start', behavior: 'auto' })
-    }
+    let sampleTimer: number | undefined
+    let frame: number | undefined
+    let hardTimeout: number | undefined
+    let lastTop: number | null = null
+    let stableMeasurements = 0
+    const tolerance = 3
 
     const stopSettling = () => {
       if (cancelled) return
       cancelled = true
-      timers.forEach((timer) => window.clearTimeout(timer))
-      resizeObserver?.disconnect()
+      if (sampleTimer !== undefined) window.clearTimeout(sampleTimer)
+      if (frame !== undefined) window.cancelAnimationFrame(frame)
+      if (hardTimeout !== undefined) window.clearTimeout(hardTimeout)
     }
 
-    timers.push(...[80, 320, 800, 1600, 3000].map((delay) => window.setTimeout(settle, delay)))
-    resizeObserver = 'ResizeObserver' in window ? new ResizeObserver(settle) : null
-    if (ref.current) resizeObserver?.observe(ref.current)
-    if (document.body) resizeObserver?.observe(document.body)
-    timers.push(window.setTimeout(stopSettling, 5000))
+    const sample = () => {
+      const target = ref.current
+      if (cancelled || !target) return
+
+      const scrollMarginTop = Number.parseFloat(window.getComputedStyle(target).scrollMarginTop) || 0
+      let top = target.getBoundingClientRect().top
+      const atPageEnd = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - tolerance
+      const isAligned = Math.abs(top - scrollMarginTop) <= tolerance || atPageEnd
+
+      if (!isAligned) {
+        target.scrollIntoView({ block: 'start', behavior: 'auto' })
+        top = target.getBoundingClientRect().top
+        stableMeasurements = 0
+      } else if (lastTop !== null && Math.abs(top - lastTop) <= tolerance) {
+        stableMeasurements += 1
+      } else {
+        stableMeasurements = 0
+      }
+
+      lastTop = top
+      if (stableMeasurements >= 3) {
+        stopSettling()
+        return
+      }
+
+      sampleTimer = window.setTimeout(sample, 90)
+    }
+
+    frame = window.requestAnimationFrame(() => {
+      ref.current?.scrollIntoView({ block: 'start', behavior: 'auto' })
+      sampleTimer = window.setTimeout(sample, 90)
+    })
+    hardTimeout = window.setTimeout(stopSettling, 2600)
 
     window.addEventListener('touchstart', stopSettling, { passive: true, once: true })
     window.addEventListener('wheel', stopSettling, { passive: true, once: true })
     window.addEventListener('pointerdown', stopSettling, { passive: true, once: true })
     window.addEventListener('keydown', stopSettling, { once: true })
+    window.addEventListener('hashchange', stopSettling, { once: true })
 
     return () => {
       stopSettling()
@@ -69,8 +111,9 @@ export function LazySection({
       window.removeEventListener('wheel', stopSettling)
       window.removeEventListener('pointerdown', stopSettling)
       window.removeEventListener('keydown', stopSettling)
+      window.removeEventListener('hashchange', stopSettling)
     }
-  }, [id, ref, wasTargeted])
+  }, [id, ref, targetAttempt, wasTargeted])
 
   return (
     <div

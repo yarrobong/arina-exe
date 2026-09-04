@@ -1,61 +1,45 @@
 # Арина.exe
 
-Mobile-first биографический сайт / цифровой архив воспоминаний в Y2K-стиле.
+Mobile-first биографический сайт и интерактивный цифровой архив воспоминаний в Y2K / black-pink-silver эстетике. Production: [yarrobong.github.io/arina-exe](https://yarrobong.github.io/arina-exe/).
 
 ## Стек
 
-- React + TypeScript
-- Vite
-- Tailwind CSS 4
+- React 19 + TypeScript + Vite 7
 - Motion for React
-- MapLibre GL JS
-- Sharp для подготовки фотографий
+- MapLibre GL JS с динамической загрузкой географической главы
+- Tailwind CSS 4 и проектные CSS-стили
+- Sharp, SVGO и FFmpeg для media pipeline
 
-## Запуск
+## Запуск и проверка
+
+Требуется Node.js 24. FFmpeg обязателен для production-конвертации видео и аудио.
 
 ```bash
-npm install
+npm ci
 npm run dev
+npm run verify-media
+npm run build
+npm run preview
 ```
 
-## Где менять содержание
+Vite использует `base: '/arina-exe/'`, а `assetUrl()` добавляет этот base к путям из content-файлов. Это сохраняет корректные URL на GitHub Pages и в локальной разработке.
 
-Основная биография не зашита в компоненты. Файлы находятся в `src/content/`:
+## Контент и архитектура
 
-- `biography.ts` — этапы жизни
-- `places.ts` — география
-- `people.ts` — друзья
-- `relationship.ts` — история с Яриком
-- `facts.ts` — факты и мемные показатели
-- `evolution.ts` — версии Arina.exe
-- `inventory.ts` — вещи
+Биография и факты отделены от компонентов и находятся в `src/content/`: `biography.ts`, `places.ts`, `people.ts`, `relationship.ts`, `facts.ts`, `evolution.ts`, `inventory.ts` и `memoryFragments.ts`. Медиа лежат в `public/media/`.
 
-## Фотографии
+Главы ниже первого экрана загружаются через `React.lazy` и `LazySection`. Deep links дожидаются стабилизации геометрии, но сразу уступают управление пользователю. MapLibre остаётся отдельным динамическим чанком. Состояние найденных Memory Fragments хранится в `localStorage`, а Motion-модалка загружается только при первом открытии. Music Dock соблюдает browser autoplay policy.
 
-Используемые сайтом оптимизированные файлы лежат в `public/media/`.
+## Media pipeline
 
-Сейчас в данных уже прописаны ожидаемые пути к фотографиям. Пока файла нет, интерфейс показывает Y2K-заглушку.
+- `npm run optimize-media` подготавливает WebP из `media-originals/`; исходники не меняются.
+- `npm run optimize-media:existing` повторно обрабатывает существующие изображения.
+- `npm run optimize:theater-map` чистит исходный SVG схемы через SVGO и создаёт 1200px WebP для интерфейса.
+- `npm run verify-media` проверяет статические ссылки на `/media/...` до сборки.
+- `npm run build` запускает TypeScript/Vite, сжимает крупные MP3, создаёт mobile-sized H.264/MP4 с `faststart` из используемых WebM и удаляет staging/неиспользуемые deploy-ассеты. У `year-2` аудио сохраняется, если оно присутствует в исходнике.
 
-Для массовой подготовки фотографий:
+Исходные WebM остаются в репозитории и используются dev-сервером. В production они заменяются более совместимыми MP4 без хранения второй тяжёлой копии.
 
-1. Создай `media-originals/` в корне проекта.
-2. Положи туда исходники с такой же структурой папок.
-3. Выполни:
+## Деплой
 
-```bash
-npm run optimize-media
-```
-
-Скрипт повернёт фотографии по EXIF, ограничит ширину 1600 px и создаст WebP в `public/media/`.
-
-## Карта
-
-Компонент `src/components/LifeMap.tsx` уже использует MapLibre. Для Екатеринбурга указана тестовая точка. Для остальных мест координаты намеренно пока не придуманы — добавь их в `src/content/places.ts`, когда будут точные адреса/координаты.
-
-## Музыка
-
-`MusicDock.tsx` готов под реальные аудиофайлы, но автозапуск не используется. Добавь файлы в `public/media/audio/` и пропиши `src` треков.
-
-## Дизайн
-
-Сайт рассчитан прежде всего на телефон. На широком экране остаётся мобильная колонка до 480 px по центру.
+`.github/workflows/deploy.yml` собирает `main` на Node.js 24, использует npm cache, проверяет наличие FFmpeg и публикует `dist/` через GitHub Pages. Исторический Cloudflare-командный путь сохранён явно как `npm run deploy:cloudflare`.

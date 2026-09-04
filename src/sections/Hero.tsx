@@ -12,6 +12,26 @@ export function Hero() {
   const trackRef = useRef<HTMLDivElement>(null)
   const [activeIndex, setActiveIndex] = useState(0)
   const [hasInteracted, setHasInteracted] = useState(false)
+  const [firstSlideLoaded, setFirstSlideLoaded] = useState(false)
+  const [preloadSecondSlide, setPreloadSecondSlide] = useState(false)
+
+  useEffect(() => {
+    if (!firstSlideLoaded) return
+
+    const idleWindow = window as typeof window & {
+      requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number
+      cancelIdleCallback?: (handle: number) => void
+    }
+    const startPreload = () => setPreloadSecondSlide(true)
+
+    if (idleWindow.requestIdleCallback) {
+      const idleHandle = idleWindow.requestIdleCallback(startPreload, { timeout: 1200 })
+      return () => idleWindow.cancelIdleCallback?.(idleHandle)
+    }
+
+    const timeout = window.setTimeout(startPreload, 250)
+    return () => window.clearTimeout(timeout)
+  }, [firstSlideLoaded])
 
   useEffect(() => {
     const track = trackRef.current
@@ -63,7 +83,14 @@ export function Hero() {
           onPointerDown={() => setHasInteracted(true)}
         >
           {slides.map((src, index) => (
-            <HeroSlide key={src} src={src} index={index} track={trackRef} />
+            <HeroSlide
+              key={src}
+              src={src}
+              index={index}
+              track={trackRef}
+              forceLoad={index === 1 && preloadSecondSlide}
+              onLoad={index === 0 ? () => setFirstSlideLoaded(true) : undefined}
+            />
           ))}
         </div>
 
@@ -86,13 +113,26 @@ export function Hero() {
   )
 }
 
-function HeroSlide({ src, index, track }: { src: string; index: number; track: React.RefObject<HTMLDivElement | null> }) {
+function HeroSlide({
+  src,
+  index,
+  track,
+  forceLoad,
+  onLoad,
+}: {
+  src: string
+  index: number
+  track: React.RefObject<HTMLDivElement | null>
+  forceLoad: boolean
+  onLoad?: () => void
+}) {
   const slideRef = useRef<HTMLDivElement>(null)
   const [shouldLoad, setShouldLoad] = useState(index === 0)
   const resolvedSrc = assetUrl(src)
+  const isLoaded = shouldLoad || forceLoad
 
   useEffect(() => {
-    if (shouldLoad || !slideRef.current || !track.current) return
+    if (isLoaded || !slideRef.current || !track.current) return
     if (!('IntersectionObserver' in window)) {
       setShouldLoad(true)
       return
@@ -106,17 +146,18 @@ function HeroSlide({ src, index, track }: { src: string; index: number; track: R
 
     observer.observe(slideRef.current)
     return () => observer.disconnect()
-  }, [shouldLoad, track])
+  }, [isLoaded, track])
 
   return (
     <div ref={slideRef} className="hero__slide" style={{ '--hero-delay': `${index * 80}ms` } as React.CSSProperties}>
-      {shouldLoad && (
+      {isLoaded && (
         <img
           src={resolvedSrc}
           alt="Арина"
-          loading={index === 0 ? 'eager' : 'lazy'}
+          loading={index < 2 ? 'eager' : 'lazy'}
           decoding="async"
           fetchPriority={index === 0 ? 'high' : 'low'}
+          onLoad={onLoad}
           onError={(event) => { event.currentTarget.style.display = 'none' }}
         />
       )}
