@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, useScroll } from 'motion/react'
+import { MemoryFragmentTrigger } from '../components/MemoryFragments'
 import { RelationshipIntro } from '../components/RelationshipIntro'
 import { RelationshipTimeline } from '../components/RelationshipTimeline'
 import { relationshipTimeline } from '../content/relationship'
@@ -27,6 +28,7 @@ export function Relationship({ anchorId = 'relationship' }: { anchorId?: string 
 
   return (
     <section className="section-shell relationship" id={anchorId ?? undefined} ref={sectionRef}>
+      <MemoryFragmentTrigger id="pink-jeans" placement="relationship" />
       <RelationshipIntro connected={connected} onConnect={() => setConnected(true)} />
       <div className="relationship-progress" aria-label={`Этап ${activeIndex + 1} из ${relationshipTimeline.length}: ${relationshipTimeline[activeIndex].period}`}>
         <div><span>RELATIONSHIP ARCHIVE</span><strong>{String(activeIndex + 1).padStart(2, '0')} / {relationshipTimeline.length}</strong></div>
