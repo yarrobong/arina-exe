@@ -12,13 +12,17 @@ type MemoryFragmentContextValue = {
 }
 
 const STORAGE_KEY = 'arina-exe:memory-fragments:v1'
+const validFragmentIds = new Set(memoryFragments.map((fragment) => fragment.id))
 const MemoryFragmentContext = createContext<MemoryFragmentContextValue | null>(null)
 
 function loadRecovered() {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)
     const parsed = raw ? JSON.parse(raw) : []
-    return new Set<string>(Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === 'string') : [])
+    const valid = Array.isArray(parsed)
+      ? parsed.filter((value): value is string => typeof value === 'string' && validFragmentIds.has(value))
+      : []
+    return new Set<string>(valid)
   } catch {
     return new Set<string>()
   }
@@ -32,6 +36,22 @@ export function MemoryFragmentProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setRecovered(loadRecovered())
   }, [])
+
+  useEffect(() => {
+    if (!active) return
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setActive(null)
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', onKeyDown)
+    }
+  }, [active])
 
   const persist = (next: Set<string>) => {
     try {
