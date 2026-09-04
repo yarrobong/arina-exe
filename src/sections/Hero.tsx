@@ -88,7 +88,7 @@ export function Hero() {
 
 function HeroSlide({ src, index, track }: { src: string; index: number; track: React.RefObject<HTMLDivElement | null> }) {
   const slideRef = useRef<HTMLDivElement>(null)
-  const [shouldLoad, setShouldLoad] = useState(index <= 1)
+  const [shouldLoad, setShouldLoad] = useState(index === 0)
   const resolvedSrc = assetUrl(src)
 
   useEffect(() => {
@@ -102,7 +102,7 @@ function HeroSlide({ src, index, track }: { src: string; index: number; track: R
       if (!entry.isIntersecting) return
       setShouldLoad(true)
       observer.disconnect()
-    }, { root: track.current, rootMargin: '0px 18%', threshold: 0.02 })
+    }, { root: track.current, rootMargin: '0px -40%', threshold: 0.02 })
 
     observer.observe(slideRef.current)
     return () => observer.disconnect()

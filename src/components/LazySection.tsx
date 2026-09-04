@@ -52,10 +52,11 @@ export function LazySection({
       resizeObserver?.disconnect()
     }
 
-    timers.push(...[80, 320, 800].map((delay) => window.setTimeout(settle, delay)))
+    timers.push(...[80, 320, 800, 1600, 3000].map((delay) => window.setTimeout(settle, delay)))
     resizeObserver = 'ResizeObserver' in window ? new ResizeObserver(settle) : null
     if (ref.current) resizeObserver?.observe(ref.current)
-    timers.push(window.setTimeout(stopSettling, 1600))
+    if (document.body) resizeObserver?.observe(document.body)
+    timers.push(window.setTimeout(stopSettling, 5000))
 
     window.addEventListener('touchstart', stopSettling, { passive: true, once: true })
     window.addEventListener('wheel', stopSettling, { passive: true, once: true })

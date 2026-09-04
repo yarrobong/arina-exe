@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { TouchEvent } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
+import { useNearViewport } from '../hooks/useNearViewport'
 import { assetUrl } from '../utils/assetUrl'
 import '../styles/video-archive.css'
 
@@ -38,6 +39,7 @@ function formatTapeTime(seconds: number) {
 
 export function VideoArchive() {
   const [active, setActive] = useState(0)
+  const [isActivated, setIsActivated] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
   const [tracking, setTracking] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
@@ -46,6 +48,11 @@ export function VideoArchive() {
   const switchTimer = useRef<number | null>(null)
   const resumeAfterSwitch = useRef(false)
   const activeTape = tapes[active]
+  const { ref: archiveRef, isNear: isArchiveVisible } = useNearViewport<HTMLElement>({
+    rootMargin: '0px',
+    threshold: 0.1,
+    once: false,
+  })
 
   useEffect(() => {
     const video = videoRef.current
@@ -55,7 +62,11 @@ export function VideoArchive() {
       return
     }
     void video.play().catch(() => setIsPlaying(false))
-  }, [isPlaying, active])
+  }, [isPlaying, active, isActivated])
+
+  useEffect(() => {
+    if (!isArchiveVisible) setIsPlaying(false)
+  }, [isArchiveVisible])
 
   useEffect(() => () => {
     if (switchTimer.current !== null) window.clearTimeout(switchTimer.current)
@@ -81,6 +92,11 @@ export function VideoArchive() {
     switchTape(next)
   }
 
+  const togglePlayback = () => {
+    if (!isPlaying) setIsActivated(true)
+    setIsPlaying((value) => !value)
+  }
+
   const onTouchStart = (event: TouchEvent<HTMLDivElement>) => {
     touchStartX.current = event.touches[0]?.clientX ?? null
   }
@@ -95,7 +111,7 @@ export function VideoArchive() {
   }
 
   return (
-    <section className="video-archive" aria-label="Видеоархив детства Арины">
+    <section ref={archiveRef} className="video-archive" aria-label="Видеоархив детства Арины">
       <div className="video-archive__topline">
         <div>
           <span>HOME VIDEO ARCHIVE</span>
@@ -121,12 +137,12 @@ export function VideoArchive() {
           >
             <video
               ref={videoRef}
-              src={assetUrl(activeTape.src)}
+              src={isActivated ? assetUrl(activeTape.src) : undefined}
               muted
               playsInline
               loop
               preload="none"
-              onClick={() => setIsPlaying((value) => !value)}
+              onClick={togglePlayback}
               onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
               aria-label={activeTape.title}
             />
@@ -139,7 +155,7 @@ export function VideoArchive() {
         <button
           className="video-archive__play"
           type="button"
-          onClick={() => setIsPlaying((value) => !value)}
+          onClick={togglePlayback}
           aria-label={isPlaying ? 'Поставить видео на паузу' : 'Воспроизвести видео'}
         >
           {isPlaying ? 'Ⅱ' : '▶'}
