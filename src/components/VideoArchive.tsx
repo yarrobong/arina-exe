@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import type { TouchEvent } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { assetUrl } from '../utils/assetUrl'
 import '../styles/video-archive.css'
@@ -6,7 +7,7 @@ import '../styles/video-archive.css'
 type Tape = {
   id: string
   src: string
-  year: string
+  period: string
   title: string
   caption: string
 }
@@ -15,14 +16,14 @@ const tapes: Tape[] = [
   {
     id: 'tape-01',
     src: '/media/childhood/baby-01.webm',
-    year: '2008',
+    period: 'детство',
     title: 'Ранний видеоархив',
     caption: 'Архив детства',
   },
   {
     id: 'tape-02',
     src: '/media/childhood/baby-02.webm',
-    year: '2009',
+    period: 'детство',
     title: 'Ещё одно детское видео',
     caption: 'Домашняя запись',
   },
@@ -67,11 +68,11 @@ export function VideoArchive() {
     switchTape(next)
   }
 
-  const onTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+  const onTouchStart = (event: TouchEvent<HTMLDivElement>) => {
     touchStartX.current = event.touches[0]?.clientX ?? null
   }
 
-  const onTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
+  const onTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
     if (touchStartX.current === null) return
     const endX = event.changedTouches[0]?.clientX ?? touchStartX.current
     const delta = endX - touchStartX.current
@@ -93,7 +94,7 @@ export function VideoArchive() {
       <div className="video-archive__screen" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
         <div className="video-archive__hud" aria-hidden="true">
           <span className="video-archive__rec"><i /> REC</span>
-          <span>{activeTape.year}<br />SP</span>
+          <span>ARCHIVE<br />SP</span>
         </div>
 
         <AnimatePresence mode="wait">
@@ -161,7 +162,7 @@ export function VideoArchive() {
             aria-pressed={index === active}
           >
             <span className="video-tape__icon" aria-hidden="true"><i /><b>{String(index + 1).padStart(2, '0')}</b><i /></span>
-            <span><small>TAPE {String(index + 1).padStart(2, '0')}</small><strong>{tape.year}</strong></span>
+            <span><small>TAPE {String(index + 1).padStart(2, '0')}</small><strong>{tape.period}</strong></span>
           </button>
         ))}
       </div>
