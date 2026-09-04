@@ -24,9 +24,12 @@ export type Era = {
   accent?: string
 }
 
+export type PersonCategory = 'SCHOOL' | 'FAMILY' | 'FRIEND' | 'RELATIONSHIP'
+
 export type Person = {
   name: string
   photo?: string
+  category: PersonCategory
 }
 
 export type Place = {
