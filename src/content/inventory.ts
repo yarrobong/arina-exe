@@ -22,7 +22,6 @@ export const inventory: InventoryItem[] = [
     kind: 'ACCESSORY',
     rarity: 'Legendary',
     status: 'ACTIVE',
-    photo: '/media/inventory/jewelry.webp',
   },
   {
     id: 'phone',
@@ -31,7 +30,6 @@ export const inventory: InventoryItem[] = [
     kind: 'DEVICE',
     rarity: 'Epic',
     status: 'ACTIVE',
-    photo: '/media/inventory/phone.webp',
   },
   {
     id: 'bag',
@@ -40,7 +38,6 @@ export const inventory: InventoryItem[] = [
     kind: 'ACCESSORY',
     rarity: 'Rare',
     status: 'ACTIVE',
-    photo: '/media/inventory/bag.webp',
   },
   {
     id: 'childhood-bear',
