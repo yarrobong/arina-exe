@@ -117,6 +117,8 @@ export function StyleAnomaly({ image, title, period, severity, caption }: StyleA
             src={image}
             alt={`${title}, ${period}`}
             loading="lazy"
+            decoding="async"
+            fetchPriority="low"
             aria-hidden={!isOpen}
             initial={{ opacity: 0, scale: 1.08, filter: 'blur(16px) contrast(1.45) saturate(.65)', clipPath: 'inset(0 100% 0 0)' }}
             animate={isOpen

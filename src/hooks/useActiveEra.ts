@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 export function useActiveEra(count: number) {
   const [active, setActive] = useState(0)
   const nodes = useRef<Array<HTMLElement | null>>([])
+  const manualSelectionUntil = useRef(0)
 
   const setStepRef = useCallback((index: number, node: HTMLElement | null) => {
     nodes.current[index] = node
@@ -24,7 +25,9 @@ export function useActiveEra(count: number) {
         }))
         .sort((a, b) => b.ratio - a.ratio || a.distance - b.distance)[0]
 
-      if (closest && Number.isFinite(closest.index)) setActive(closest.index)
+      if (closest && Number.isFinite(closest.index) && Date.now() >= manualSelectionUntil.current) {
+        setActive(closest.index)
+      }
     }, {
       rootMargin: '-39% 0px -43% 0px',
       threshold: [0, 0.1, 0.35, 0.65, 1],
@@ -34,5 +37,10 @@ export function useActiveEra(count: number) {
     return () => observer.disconnect()
   }, [count])
 
-  return { active, setActive, setStepRef }
+  const selectActive = useCallback((index: number) => {
+    manualSelectionUntil.current = Date.now() + 1800
+    setActive(index)
+  }, [])
+
+  return { active, setActive: selectActive, setStepRef }
 }

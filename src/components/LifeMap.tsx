@@ -1,16 +1,23 @@
 import { useEffect, useRef } from 'react'
-import { GeoJSONSource, Map as MapLibreMap, Marker, setWorkerUrl } from 'maplibre-gl'
+import type { GeoJSONSource, Map as MapLibreMap, Marker } from 'maplibre-gl'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
+import 'maplibre-gl/dist/maplibre-gl.css'
 import { places } from '../content/places'
 import { useActiveEra } from '../hooks/useActiveEra'
+import { useNearViewport } from '../hooks/useNearViewport'
 import { MapStoryCard } from './MapStoryCard'
-
-setWorkerUrl(workerUrl)
 
 const ROUTE_SOURCE = 'life-route'
 const VISITED_SOURCE = 'life-route-visited'
-const SATELLITE_SOURCE = 'satellite-imagery'
-const SATELLITE_LAYER = 'satellite-imagery-layer'
+function hideRoadLayers(map: MapLibreMap) {
+  map.getStyle().layers
+    ?.filter((layer) => {
+      const layerConfig = layer as unknown as { sourceLayer?: string; 'source-layer'?: string }
+      const sourceLayer = layerConfig.sourceLayer ?? layerConfig['source-layer']
+      return sourceLayer === 'transportation' || sourceLayer === 'transportation_name'
+    })
+    .forEach((layer) => map.setLayoutProperty(layer.id, 'visibility', 'none'))
+}
 
 function routeFeature(coordinates: [number, number][]) {
   const lineCoordinates = coordinates.length === 1
@@ -25,6 +32,7 @@ function routeFeature(coordinates: [number, number][]) {
 }
 
 export function LifeMap() {
+  const { ref: activationRef, isNear } = useNearViewport<HTMLDivElement>({ rootMargin: '700px 0px' })
   const container = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const markerRefs = useRef(new Map<string, Marker>())
@@ -36,35 +44,46 @@ export function LifeMap() {
   activeRef.current = active
 
   useEffect(() => {
-    if (!container.current || mapRef.current) return
+    if (!isNear || !container.current || mapRef.current) return
 
     const firstPlace = places.find((place) => place.coordinates)
     if (!firstPlace?.coordinates) return
 
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const mappedPlaces = places.filter((place) => place.coordinates)
-    const route = mappedPlaces.map((place) => place.coordinates!)
-    const map = new MapLibreMap({
-      container: container.current,
-      style: 'https://tiles.openfreemap.org/styles/dark',
-      center: firstPlace.coordinates,
-      zoom: firstPlace.zoom ?? 11,
-      bearing: firstPlace.bearing ?? 0,
-      pitch: firstPlace.pitch ?? 42,
-      attributionControl: false,
-      dragPan: false,
-      scrollZoom: false,
-      doubleClickZoom: false,
-      touchZoomRotate: false,
-      dragRotate: false,
-      touchPitch: false,
-      boxZoom: false,
-      keyboard: false,
-      maxPitch: 60,
-    })
-    mapRef.current = map
+    let cancelled = false
+    let resizeObserver: ResizeObserver | null = null
+    let map: MapLibreMap | null = null
 
-    mappedPlaces.forEach((place, index) => {
+    void (async () => {
+      const maplibre = await import('maplibre-gl')
+      if (cancelled || !container.current) return
+
+      maplibre.setWorkerUrl(workerUrl)
+
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      const mappedPlaces = places.filter((place) => place.coordinates)
+      const route = mappedPlaces.map((place) => place.coordinates!)
+      const mapInstance = new maplibre.Map({
+        container: container.current,
+        style: 'https://tiles.openfreemap.org/styles/dark',
+        center: firstPlace.coordinates,
+        zoom: firstPlace.zoom ?? 11,
+        bearing: firstPlace.bearing ?? 0,
+        pitch: firstPlace.pitch ?? 42,
+        attributionControl: false,
+        dragPan: false,
+        scrollZoom: false,
+        doubleClickZoom: false,
+        touchZoomRotate: false,
+        dragRotate: false,
+        touchPitch: false,
+        boxZoom: false,
+        keyboard: false,
+        maxPitch: 60,
+      })
+      map = mapInstance
+      mapRef.current = mapInstance
+
+      mappedPlaces.forEach((place, index) => {
       const element = document.createElement('div')
       element.className = 'life-map__marker'
       element.setAttribute('role', 'img')
@@ -75,9 +94,9 @@ export function LifeMap() {
         <span class="life-map__marker-name">${place.title}</span>
       `
 
-      const marker = new Marker({ element, anchor: 'center' })
+      const marker = new maplibre.Marker({ element, anchor: 'center' })
         .setLngLat(place.coordinates!)
-        .addTo(map)
+        .addTo(mapInstance)
       markerRefs.current.set(place.id, marker)
     })
 
@@ -93,7 +112,7 @@ export function LifeMap() {
       const place = places[index]
       if (!place?.coordinates) return
 
-      map.stop()
+      mapInstance.stop()
       const camera = {
         center: place.coordinates,
         zoom: place.zoom ?? 11,
@@ -102,8 +121,8 @@ export function LifeMap() {
         padding: { top: 76, right: 24, bottom: 270, left: 24 },
       }
 
-      if (immediate || reduceMotion) map.jumpTo(camera)
-      else map.flyTo({
+      if (immediate || reduceMotion) mapInstance.jumpTo(camera)
+      else mapInstance.flyTo({
         ...camera,
         duration: 1850,
         curve: 1.28,
@@ -113,44 +132,27 @@ export function LifeMap() {
     }
 
     updateMarkerStates(0)
-    map.once('load', () => {
-      const firstSymbolLayer = map.getStyle().layers?.find((layer) => layer.type === 'symbol')?.id
-      map.addSource(SATELLITE_SOURCE, {
-        type: 'raster',
-        tiles: ['https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/g/{z}/{y}/{x}.jpg'],
-        tileSize: 256,
-        maxzoom: 14,
-        attribution: 'Sentinel-2 cloudless — EOX',
-      })
-      map.addLayer({
-        id: SATELLITE_LAYER,
-        type: 'raster',
-        source: SATELLITE_SOURCE,
-        paint: {
-          'raster-saturation': 0.04,
-          'raster-contrast': 0.08,
-          'raster-brightness-max': 0.9,
-          'raster-fade-duration': 450,
-        },
-      }, firstSymbolLayer)
-      map.addSource(ROUTE_SOURCE, { type: 'geojson', data: routeFeature(route) })
-      map.addSource(VISITED_SOURCE, { type: 'geojson', data: routeFeature(route.slice(0, 1)) })
+      mapInstance.once('load', () => {
+      hideRoadLayers(mapInstance)
+      const firstSymbolLayer = mapInstance.getStyle().layers?.find((layer) => layer.type === 'symbol')?.id
+      mapInstance.addSource(ROUTE_SOURCE, { type: 'geojson', data: routeFeature(route) })
+      mapInstance.addSource(VISITED_SOURCE, { type: 'geojson', data: routeFeature(route.slice(0, 1)) })
 
-      map.addLayer({
+      mapInstance.addLayer({
         id: 'life-route-glow',
         type: 'line',
         source: ROUTE_SOURCE,
         layout: { 'line-cap': 'round', 'line-join': 'round' },
         paint: { 'line-color': '#ff4fa3', 'line-width': 9, 'line-opacity': 0.13, 'line-blur': 5 },
       }, firstSymbolLayer)
-      map.addLayer({
+      mapInstance.addLayer({
         id: 'life-route-line',
         type: 'line',
         source: ROUTE_SOURCE,
         layout: { 'line-cap': 'round', 'line-join': 'round' },
         paint: { 'line-color': '#bbb9c5', 'line-width': 1.25, 'line-opacity': 0.36, 'line-dasharray': [1.4, 2.1] },
       }, firstSymbolLayer)
-      map.addLayer({
+      mapInstance.addLayer({
         id: 'life-route-visited-line',
         type: 'line',
         source: VISITED_SOURCE,
@@ -161,21 +163,23 @@ export function LifeMap() {
       mapReadyRef.current = true
       const initialIndex = activeRef.current
       updateMarkerStates(initialIndex)
-      ;(map.getSource(VISITED_SOURCE) as GeoJSONSource).setData(routeFeature(route.slice(0, initialIndex + 1)))
+      ;(mapInstance.getSource(VISITED_SOURCE) as GeoJSONSource).setData(routeFeature(route.slice(0, initialIndex + 1)))
       moveCamera(initialIndex, true)
     })
 
-    const resizeObserver = new ResizeObserver(() => map.resize())
-    resizeObserver.observe(container.current)
+      resizeObserver = new ResizeObserver(() => mapInstance.resize())
+      resizeObserver.observe(container.current)
+    })()
 
     return () => {
-      resizeObserver.disconnect()
+      cancelled = true
+      resizeObserver?.disconnect()
       markerRefs.current.clear()
-      map.remove()
+      map?.remove()
       mapRef.current = null
       mapReadyRef.current = false
     }
-  }, [])
+  }, [isNear])
 
   useEffect(() => {
     const map = mapRef.current
@@ -207,14 +211,14 @@ export function LifeMap() {
     const step = document.querySelector<HTMLElement>(`.life-map__step[data-index="${index}"]`)
     if (!step) return
     setActive(index)
-    window.scrollTo({
-      top: window.scrollY + step.getBoundingClientRect().top - window.innerHeight * 0.1,
+    step.scrollIntoView({
       behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+      block: 'center',
     })
   }
 
   return (
-    <div className="life-map-story">
+    <div ref={activationRef} className="life-map-story">
       <div className="life-map-story__sticky">
         <div className="life-map__canvas" ref={container} aria-label="Маршрут жизни Арины на карте" />
         <div className="life-map__atmosphere" aria-hidden="true" />

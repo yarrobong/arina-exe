@@ -1,9 +1,9 @@
 import { facts, memeStats } from '../content/facts'
 import { SectionHeading } from '../components/SectionHeading'
 
-export function Facts() {
+export function Facts({ anchorId = 'facts' }: { anchorId?: string | null }) {
   return (
-    <section className="section-shell" id="facts">
+    <section className="section-shell content-visibility-section" id={anchorId ?? undefined}>
       <SectionHeading eyebrow="System info" title="Арина в цифрах" />
       <div className="facts-grid">
         {facts.map(([label, value]) => <div className="fact-card" key={label}><span>{label}</span><strong>{value}</strong></div>)}

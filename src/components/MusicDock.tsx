@@ -26,11 +26,23 @@ export const MusicDock = forwardRef<MusicDockHandle>(function MusicDock(_, ref) 
   const showPlayPrompt = showPrompt && !playing && hasAudio
   const status = useMemo(() => hasAudio ? (playing ? 'играет' : 'пауза') : 'ожидает трек', [hasAudio, playing])
 
-  const next = () => { audio.current?.pause(); setPlaying(false); setIndex((i) => (i + 1) % tracks.length) }
-  const prev = () => { audio.current?.pause(); setPlaying(false); setIndex((i) => (i - 1 + tracks.length) % tracks.length) }
+  const releaseAudio = () => {
+    const element = audio.current
+    if (!element) return
+    element.pause()
+    element.removeAttribute('src')
+    element.load()
+  }
+
+  const next = () => { releaseAudio(); setPlaying(false); setIndex((i) => (i + 1) % tracks.length) }
+  const prev = () => { releaseAudio(); setPlaying(false); setIndex((i) => (i - 1 + tracks.length) % tracks.length) }
 
   const playCurrent = async () => {
     if (!hasAudio || !audio.current) return
+    if (audio.current.getAttribute('src') !== track.src) {
+      audio.current.src = track.src
+      audio.current.load()
+    }
     try {
       await audio.current.play()
       setPlaying(true)
@@ -50,7 +62,7 @@ export const MusicDock = forwardRef<MusicDockHandle>(function MusicDock(_, ref) 
     }
 
     requestedTrack.current = wasPlaying ? trackId : null
-    audio.current?.pause()
+    releaseAudio()
     setPlaying(false)
     setIndex(nextIndex)
     setShowPrompt(!wasPlaying)
@@ -66,7 +78,7 @@ export const MusicDock = forwardRef<MusicDockHandle>(function MusicDock(_, ref) 
     if (nextIndex < 0) return
 
     requestedTrack.current = trackId
-    audio.current?.pause()
+    releaseAudio()
     setPlaying(false)
     setShowPrompt(false)
     setIndex(nextIndex)
@@ -93,7 +105,7 @@ export const MusicDock = forwardRef<MusicDockHandle>(function MusicDock(_, ref) 
 
   return (
     <div className={`music-dock${showPlayPrompt ? ' music-dock--prompt' : ''}`}>
-      <audio ref={audio} src={track.src || undefined} onEnded={next} />
+      <audio ref={audio} preload="none" onEnded={next} />
       <button onClick={prev} aria-label="Предыдущий трек">‹</button>
       <button
         className={`music-dock__play${showPlayPrompt ? ' music-dock__play--prompt' : ''}`}

@@ -1,25 +1,29 @@
-import { useEffect, useRef } from 'react'
-import { TopNav } from './components/TopNav'
+import { lazy, useEffect, useRef } from 'react'
+import { LazySection } from './components/LazySection'
 import { MusicDock, type MusicDockHandle } from './components/MusicDock'
+import { TopNav } from './components/TopNav'
 import { eras } from './content/biography'
 import { Hero } from './sections/Hero'
-import { EraSection } from './sections/EraSection'
-import { Geography } from './sections/Geography'
-import { Evolution } from './sections/Evolution'
-import { Friends } from './sections/Friends'
-import { Relationship } from './sections/Relationship'
-import { Facts } from './sections/Facts'
-import { Inventory } from './sections/Inventory'
-import { Compromat } from './sections/Compromat'
-import { Future } from './sections/Future'
-import { SportArchive } from './sections/SportArchive'
+
+const DeferredEraSection = lazy(() => import('./sections/EraSection').then((module) => ({ default: module.EraSection })))
+const DeferredGeography = lazy(() => import('./sections/Geography').then((module) => ({ default: module.Geography })))
+const DeferredSportArchive = lazy(() => import('./sections/SportArchive').then((module) => ({ default: module.SportArchive })))
+const DeferredEvolution = lazy(() => import('./sections/Evolution').then((module) => ({ default: module.Evolution })))
+const DeferredFriends = lazy(() => import('./sections/Friends').then((module) => ({ default: module.Friends })))
+const DeferredRelationship = lazy(() => import('./sections/Relationship').then((module) => ({ default: module.Relationship })))
+const DeferredFacts = lazy(() => import('./sections/Facts').then((module) => ({ default: module.Facts })))
+const DeferredInventory = lazy(() => import('./sections/Inventory').then((module) => ({ default: module.Inventory })))
+const DeferredCompromat = lazy(() => import('./sections/Compromat').then((module) => ({ default: module.Compromat })))
+const DeferredFuture = lazy(() => import('./sections/Future').then((module) => ({ default: module.Future })))
+
+const eraMinHeight = (photoCount: number, extra = '300px') => `calc(${Math.max(photoCount, 1)} * 60svh + ${extra})`
 
 export default function App() {
   const musicDock = useRef<MusicDockHandle>(null)
   const playChapter = (trackId: string) => musicDock.current?.playTrack(trackId)
 
   useEffect(() => {
-    const sections = Array.from(document.querySelectorAll<HTMLElement>('.era-section'))
+    const sections = Array.from(document.querySelectorAll<HTMLElement>('[data-music-chapter]'))
     if (sections.length === 0) return
 
     const visibility = new Map<Element, number>()
@@ -33,10 +37,11 @@ export default function App() {
       const current = sections
         .filter((section) => visibility.has(section))
         .sort((a, b) => (visibility.get(b) ?? 0) - (visibility.get(a) ?? 0))[0]
+      const chapter = current?.dataset.musicChapter
 
-      if (current && current.id !== activeChapter) {
-        activeChapter = current.id
-        musicDock.current?.selectTrack(current.id)
+      if (chapter && chapter !== activeChapter) {
+        activeChapter = chapter
+        musicDock.current?.selectTrack(chapter)
       }
     }, { rootMargin: '-42% 0px -42% 0px', threshold: [0, 0.2, 0.5, 1] })
 
@@ -49,23 +54,57 @@ export default function App() {
       <main className="site-shell">
         <TopNav />
         <Hero />
-        <EraSection era={eras[0]} onPlay={playChapter} />
-        <Geography />
-        <EraSection era={eras[1]} onPlay={playChapter} />
-        <EraSection era={eras[2]} onPlay={playChapter} />
-        <SportArchive />
-        <Evolution />
-        <EraSection era={eras[3]} onPlay={playChapter} />
-        <section id="university">
-          <EraSection era={eras[4]} onPlay={playChapter} />
-          <EraSection era={eras[5]} onPlay={playChapter} />
+
+        <LazySection id={eras[0].id} musicChapter={eras[0].id} minHeight={eraMinHeight(eras[0].photos.length)}>
+          <DeferredEraSection era={eras[0]} onPlay={playChapter} anchorId={null} />
+        </LazySection>
+        <LazySection id="geography" minHeight="190svh">
+          <DeferredGeography anchorId={null} />
+        </LazySection>
+        <LazySection id={eras[1].id} musicChapter={eras[1].id} minHeight={eraMinHeight(eras[1].photos.length)}>
+          <DeferredEraSection era={eras[1]} onPlay={playChapter} anchorId={null} />
+        </LazySection>
+        <LazySection id={eras[2].id} musicChapter={eras[2].id} minHeight={eraMinHeight(eras[2].photos.length, '900px')}>
+          <DeferredEraSection era={eras[2]} onPlay={playChapter} anchorId={null} />
+        </LazySection>
+        <LazySection id="sport" minHeight="240svh">
+          <DeferredSportArchive anchorId={null} />
+        </LazySection>
+        <LazySection id="evolution" minHeight="640px">
+          <DeferredEvolution anchorId={null} />
+        </LazySection>
+        <LazySection id={eras[3].id} musicChapter={eras[3].id} minHeight={eraMinHeight(eras[3].photos.length)}>
+          <DeferredEraSection era={eras[3]} onPlay={playChapter} anchorId={null} />
+        </LazySection>
+
+        <section className="university-anchor">
+          <LazySection id="university" musicChapter={eras[4].id} minHeight={eraMinHeight(eras[4].photos.length)}>
+            <DeferredEraSection era={eras[4]} onPlay={playChapter} anchorId={null} />
+          </LazySection>
+          <LazySection musicChapter={eras[5].id} minHeight={eraMinHeight(eras[5].photos.length)}>
+            <DeferredEraSection era={eras[5]} onPlay={playChapter} anchorId={null} />
+          </LazySection>
         </section>
-        <Friends />
-        <Relationship />
-        <Facts />
-        <Inventory />
-        <Compromat />
-        <Future />
+
+        <LazySection id="friends" minHeight="1600px">
+          <DeferredFriends anchorId={null} />
+        </LazySection>
+        <LazySection id="relationship" minHeight="calc(453svh + 4700px)">
+          <DeferredRelationship anchorId={null} />
+        </LazySection>
+        <LazySection id="facts" minHeight="560px">
+          <DeferredFacts anchorId={null} />
+        </LazySection>
+        <LazySection id="inventory" minHeight="620px">
+          <DeferredInventory anchorId={null} />
+        </LazySection>
+        <LazySection id="compromat" minHeight="540px">
+          <DeferredCompromat anchorId={null} />
+        </LazySection>
+        <LazySection id="future" minHeight="520px">
+          <DeferredFuture anchorId={null} />
+        </LazySection>
+
         <footer className="footer">ARINA.EXE · MEMORY ARCHIVE · 2007 → ∞</footer>
         <MusicDock ref={musicDock} />
       </main>

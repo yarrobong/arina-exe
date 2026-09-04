@@ -1,15 +1,17 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { motion } from 'motion/react'
 import type { Video } from '../content/types'
+import { LazyImage } from './LazyImage'
+import { LazyVideo } from './LazyVideo'
 
 export function CourseVideo({ video }: { video: Video }) {
-  const videoRef = useRef<HTMLVideoElement>(null)
   const [hasError, setHasError] = useState(false)
+  const [retryToken, setRetryToken] = useState(0)
   const isGif = video.kind === 'gif'
 
   const retry = () => {
     setHasError(false)
-    videoRef.current?.load()
+    setRetryToken((value) => value + 1)
   }
 
   return (
@@ -25,19 +27,17 @@ export function CourseVideo({ video }: { video: Video }) {
           <>
             <div className="course-video__label" aria-hidden="true">MEDIA // CHAPTER 06</div>
             {isGif ? (
-              <img src={video.src} alt={video.title} onError={() => setHasError(true)} />
+              <LazyImage src={video.src} alt={video.title} onError={() => setHasError(true)} />
             ) : (
-              <video
-                ref={videoRef}
+              <LazyVideo
+                key={retryToken}
                 controls
-                playsInline
-                preload="metadata"
+                autoPlay={false}
+                loop={false}
+                src={video.src}
+                ariaLabel={video.title}
                 onError={() => setHasError(true)}
-                aria-label={video.title}
-              >
-                <source src={video.src} type="video/mp4" />
-                Ваш браузер не поддерживает воспроизведение видео.
-              </video>
+              />
             )}
           </>
         ) : (

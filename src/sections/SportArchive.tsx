@@ -33,7 +33,7 @@ function RouteCheckpoint({
   )
 }
 
-export function SportArchive() {
+export function SportArchive({ anchorId = 'sport' }: { anchorId?: string | null }) {
   const sceneRef = useRef<HTMLDivElement>(null)
   const routeRef = useRef<SVGPathElement>(null)
   const [marker, setMarker] = useState({ x: 78, y: 16 })
@@ -67,7 +67,7 @@ export function SportArchive() {
   }, [])
 
   return (
-    <section className="sport-scene" id="sport">
+    <section className="sport-scene" id={anchorId ?? undefined}>
       <motion.header
         className="sport-scene__intro"
         initial={{ opacity: 0, y: 22 }}

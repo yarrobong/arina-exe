@@ -1,5 +1,6 @@
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useState } from 'react'
+import { LazyImage } from './LazyImage'
 
 export function OutfitScan() {
   const [open, setOpen] = useState(false)
@@ -8,7 +9,7 @@ export function OutfitScan() {
   return (
     <div className="outfit-scan">
       <div className="outfit-scan__photo">
-        <img src="/media/relationship/our-archive-15.webp" alt="Архивный кадр с розовыми джинсами" loading="lazy" decoding="async" />
+        <LazyImage src="/media/relationship/our-archive-15.webp" alt="Архивный кадр с розовыми джинсами" />
         <button type="button" onClick={() => setOpen((value) => !value)} aria-expanded={open}>
           {open ? 'CLOSE SCAN' : 'OUTFIT SCAN'}
         </button>

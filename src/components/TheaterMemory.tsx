@@ -1,7 +1,6 @@
 import { motion, useMotionValueEvent, useReducedMotion, useScroll } from 'motion/react'
 import { useRef, useState } from 'react'
-
-const rows = [82, 108, 134, 160, 186, 212, 238]
+import { LazyImage } from './LazyImage'
 
 export function TheaterMemory() {
   const sceneRef = useRef<HTMLDivElement>(null)
@@ -20,44 +19,29 @@ export function TheaterMemory() {
           <span>THEATER SEAT UPGRADE</span>
           <strong>{upgraded ? 'ROW 01' : 'BACK ROW'}</strong>
         </div>
-        <svg className="theater-map" viewBox="0 0 356 270" role="img" aria-label={upgraded ? 'Места переместились на первый ряд' : 'Исходные места почти в последнем ряду'}>
-          <defs>
-            <linearGradient id="stage-chrome" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stopColor="#f8f8ff" />
-              <stop offset="0.48" stopColor="#777985" />
-              <stop offset="1" stopColor="#ececf3" />
-            </linearGradient>
-            <filter id="pink-glow"><feGaussianBlur stdDeviation="4" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-          </defs>
-          <path className="theater-map__stage" d="M72 24 Q178 2 284 24 L272 52 Q178 36 84 52 Z" fill="url(#stage-chrome)" />
-          <text x="178" y="31" textAnchor="middle">STAGE</text>
-          {rows.map((y, rowIndex) => (
-            <g key={y} className="theater-map__row">
-              {Array.from({ length: 11 }, (_, seatIndex) => (
-                <circle key={seatIndex} cx={58 + seatIndex * 24} cy={y} r="4" />
-              ))}
-              <text x="18" y={y + 3}>{String(rowIndex + 1).padStart(2, '0')}</text>
-            </g>
-          ))}
-          <motion.path
-            d="M298 238 C 280 180, 190 132, 64 82"
-            fill="none"
-            stroke="#ff4fa3"
-            strokeWidth="1.5"
-            strokeDasharray="4 5"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: upgraded ? 1 : 0, opacity: upgraded ? 0.65 : 0 }}
-            transition={{ duration: reduceMotion ? 0 : 0.65 }}
-          />
-          <motion.circle
-            r="8"
-            fill="#ff4fa3"
-            filter="url(#pink-glow)"
-            initial={false}
-            animate={{ cx: upgraded ? 64 : 298, cy: upgraded ? 82 : 238 }}
-            transition={{ duration: reduceMotion ? 0 : 0.7, ease: [0.22, 1, 0.36, 1] }}
-          />
-        </svg>
+        <div className="theater-map" role="img" aria-label="Реальная схема зала оперы и балета с ложами и рядами">
+          <LazyImage src="/media/opera-ballet-map.svg" alt="Схема зала оперы и балета" />
+          <svg className="theater-map__overlay" viewBox="0 0 100 100" aria-hidden="true">
+            <motion.path
+              d="M80 80 C68 61 47 45 23 23"
+              fill="none"
+              stroke="#ff4fa3"
+              strokeWidth="0.7"
+              strokeDasharray="2 2.5"
+              pathLength={1}
+              initial={{ pathLength: 0, opacity: 0 }}
+              animate={{ pathLength: upgraded ? 1 : 0, opacity: upgraded ? 0.65 : 0 }}
+              transition={{ duration: reduceMotion ? 0 : 0.65 }}
+            />
+            <motion.circle
+              r="3"
+              fill="#ff4fa3"
+              initial={false}
+              animate={{ cx: upgraded ? 23 : 80, cy: upgraded ? 23 : 80 }}
+              transition={{ duration: reduceMotion ? 0 : 0.7, ease: [0.22, 1, 0.36, 1] }}
+            />
+          </svg>
+        </div>
         <motion.div
           className="theater-memory__status"
           key={upgraded ? 'upgraded' : 'conflict'}

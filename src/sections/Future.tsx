@@ -1,8 +1,8 @@
 import { SectionHeading } from '../components/SectionHeading'
 
-export function Future() {
+export function Future({ anchorId = 'future' }: { anchorId?: string | null }) {
   return (
-    <section className="section-shell future" id="future">
+    <section className="section-shell future content-visibility-section" id={anchorId ?? undefined}>
       <SectionHeading eyebrow="Next release" title="Что дальше?" />
       <article className="future-card">
         <span>версия Арины</span>

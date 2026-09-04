@@ -4,7 +4,7 @@ import { RelationshipIntro } from '../components/RelationshipIntro'
 import { RelationshipTimeline } from '../components/RelationshipTimeline'
 import { relationshipTimeline } from '../content/relationship'
 
-export function Relationship() {
+export function Relationship({ anchorId = 'relationship' }: { anchorId?: string | null }) {
   const sectionRef = useRef<HTMLElement>(null)
   const [connected, setConnected] = useState(false)
   const [activeIndex, setActiveIndex] = useState(0)
@@ -25,7 +25,7 @@ export function Relationship() {
   }, [])
 
   return (
-    <section className="section-shell relationship" id="relationship" ref={sectionRef}>
+    <section className="section-shell relationship" id={anchorId ?? undefined} ref={sectionRef}>
       <RelationshipIntro connected={connected} onConnect={() => setConnected(true)} />
       <div className="relationship-progress" aria-label={`Этап ${activeIndex + 1} из ${relationshipTimeline.length}: ${relationshipTimeline[activeIndex].period}`}>
         <div><span>RELATIONSHIP ARCHIVE</span><strong>{String(activeIndex + 1).padStart(2, '0')} / {relationshipTimeline.length}</strong></div>

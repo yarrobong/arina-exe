@@ -1,9 +1,9 @@
 import { inventory } from '../content/inventory'
 import { SectionHeading } from '../components/SectionHeading'
 
-export function Inventory() {
+export function Inventory({ anchorId = 'inventory' }: { anchorId?: string | null }) {
   return (
-    <section className="section-shell" id="inventory">
+    <section className="section-shell content-visibility-section" id={anchorId ?? undefined}>
       <SectionHeading eyebrow="Inventory" title="Вещи Арины" note="Эти карточки специально ждут фотографии вещей, которые вы снимете для сайта." />
       <div className="inventory-grid">
         {inventory.map((item) => (

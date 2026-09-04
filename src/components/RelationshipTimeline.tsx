@@ -2,6 +2,7 @@ import { motion, useScroll } from 'motion/react'
 import { useRef } from 'react'
 import type { RelationshipEvent } from '../content/relationship'
 import { relationshipPhotos } from '../content/relationship'
+import { LazyImage } from './LazyImage'
 import { NightChat } from './NightChat'
 import { OutfitScan } from './OutfitScan'
 import { TarotCheck } from './TarotCheck'
@@ -84,7 +85,7 @@ function EventInterface({ event }: { event: RelationshipEvent }) {
         <div className="relationship-gallery__track" aria-label="Совместные фотографии, листайте в сторону">
           {relationshipPhotos.map((photo, index) => (
             <figure key={photo.src}>
-              <img src={photo.src} alt={photo.alt} loading="lazy" decoding="async" />
+              <LazyImage src={photo.src} alt={photo.alt} />
               <figcaption><span>MEMORY {String(index + 1).padStart(2, '0')}</span><small>date: unknown</small></figcaption>
             </figure>
           ))}

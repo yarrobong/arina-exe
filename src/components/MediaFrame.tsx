@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'motion/react'
+import { LazyImage } from './LazyImage'
+import { LazyVideo } from './LazyVideo'
 
 export function MediaFrame({ src, alt, caption, date, tilt = 0 }: { src: string; alt: string; caption?: string; date?: string; tilt?: number }) {
   const [broken, setBroken] = useState(false)
@@ -15,11 +17,9 @@ export function MediaFrame({ src, alt, caption, date, tilt = 0 }: { src: string;
       <div className="media-frame__image">
         {!broken ? (
           isVideo ? (
-            <video autoPlay loop muted playsInline preload="metadata" aria-label={alt} onError={() => setBroken(true)}>
-              <source src={src} type="video/webm" />
-            </video>
+            <LazyVideo src={src} ariaLabel={alt} onError={() => setBroken(true)} />
           ) : (
-            <img src={src} alt={alt} loading="lazy" onError={() => setBroken(true)} />
+            <LazyImage src={src} alt={alt} onError={() => setBroken(true)} />
           )
         ) : (
           <div className="media-placeholder" aria-label={alt}>

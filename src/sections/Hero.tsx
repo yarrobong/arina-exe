@@ -1,4 +1,4 @@
-import { motion } from 'motion/react'
+import { useEffect, useRef, useState } from 'react'
 
 const slides = [
   '/media/evolution/arina-18.webp',
@@ -7,18 +7,55 @@ const slides = [
 ]
 
 export function Hero() {
+  const trackRef = useRef<HTMLDivElement>(null)
+
   return (
     <section className="hero" id="top">
-      <div className="hero__slides" aria-label="Фотографии Арины">
+      <div ref={trackRef} className="hero__slides" aria-label="Фотографии Арины">
         {slides.map((src, index) => (
-          <motion.div key={src} className="hero__slide" initial={{ opacity: 0, scale: 1.04 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: index * .08, duration: .7 }}>
-            <img src={src} alt="Арина" onError={(e) => { e.currentTarget.style.display = 'none' }} />
-            <div className="hero__placeholder" aria-hidden="true" />
-          </motion.div>
+          <HeroSlide key={src} src={src} index={index} track={trackRef} />
         ))}
       </div>
-      <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .25, duration: .7 }}>Арина</motion.h1>
+      <h1>Арина</h1>
       <div className="hero__ticker"><span>MEMORY ARCHIVE ✦ 2007 → NOW ✦ Y2K BIOGRAPHY ✦ </span><span>MEMORY ARCHIVE ✦ 2007 → NOW ✦ Y2K BIOGRAPHY ✦ </span></div>
     </section>
+  )
+}
+
+function HeroSlide({ src, index, track }: { src: string; index: number; track: React.RefObject<HTMLDivElement | null> }) {
+  const slideRef = useRef<HTMLDivElement>(null)
+  const [shouldLoad, setShouldLoad] = useState(index === 0)
+
+  useEffect(() => {
+    if (shouldLoad || !slideRef.current || !track.current) return
+    if (!('IntersectionObserver' in window)) {
+      setShouldLoad(true)
+      return
+    }
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return
+      setShouldLoad(true)
+      observer.disconnect()
+    }, { root: track.current, rootMargin: '0px -10%', threshold: 0.05 })
+
+    observer.observe(slideRef.current)
+    return () => observer.disconnect()
+  }, [shouldLoad, track])
+
+  return (
+    <div ref={slideRef} className="hero__slide" style={{ '--hero-delay': `${index * 80}ms` } as React.CSSProperties}>
+      {shouldLoad && (
+        <img
+          src={src}
+          alt="Арина"
+          loading={index === 0 ? 'eager' : 'lazy'}
+          decoding="async"
+          fetchPriority={index === 0 ? 'high' : 'low'}
+          onError={(event) => { event.currentTarget.style.display = 'none' }}
+        />
+      )}
+      <div className="hero__placeholder" aria-hidden="true" />
+    </div>
   )
 }

@@ -3,11 +3,11 @@ import { ScrollaroidGallery } from '../components/ScrollaroidGallery'
 import { StyleAnomaly } from '../components/StyleAnomaly'
 import type { Era } from '../content/types'
 
-export function EraSection({ era, onPlay }: { era: Era; onPlay: (trackId: string) => void }) {
+export function EraSection({ era, onPlay, anchorId = era.id }: { era: Era; onPlay: (trackId: string) => void; anchorId?: string | null }) {
   const galleryPhotos = era.photos.filter((photo) => photo.src !== '/media/school/5-9/brows.webp')
 
   return (
-    <section className="era-section" id={era.id}>
+    <section className="era-section" id={anchorId ?? undefined}>
       <div className="era-section__topline">
         <span>{era.eyebrow}</span>
         <button
