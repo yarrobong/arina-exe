@@ -17,13 +17,10 @@ async function walk(dir) {
   return files
 }
 
-// Raw/staging material should never be part of the production site.
-for (const relative of [
-  ['media', 'unused'],
-  ['media', 'разбери и не удаляй'],
-]) {
-  await rm(path.join(distDir, ...relative), { recursive: true, force: true })
-}
+// Raw unused material should never be part of the production site.
+// The legacy "разбери и не удаляй" folder currently contains the Barbie image used by Evolution,
+// so it stays until that binary asset is moved to a production-named folder.
+await rm(path.join(distDir, 'media', 'unused'), { recursive: true, force: true })
 
 let removed = 0
 for (const file of await walk(distDir)) {
