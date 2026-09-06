@@ -155,7 +155,7 @@ export function TikTokChatScene({ activeStage = 5 }: { activeStage?: number }) {
       <main className="tiktok-chat__canvas">
         <TikTokSharedVideo {...video} />
         <button className="tiktok-chat__share" type="button" aria-label="Поделиться видео"><ShareIcon /></button>
-        <TikTokPaperMessage variant="short" visible={show(2)} label="Входящее сообщение: хочу быть как елена дилдо">хочу быть как елена дилдо</TikTokPaperMessage>
+        <TikTokPaperMessage variant="short" visible={show(2)} label="Входящее сообщение: хочу быть как она">хочу быть как она</TikTokPaperMessage>
         <TikTokPaperMessage variant="long" visible={show(3)} label="Входящее сообщение: газ завтра увидимся">газ завтра увидимся</TikTokPaperMessage>
         <div className="tiktok-chat__incoming-avatar tiktok-chat__incoming-avatar--first" aria-hidden="true"><DoodleAvatar /></div>
         <div className="tiktok-chat__incoming-avatar tiktok-chat__incoming-avatar--second" aria-hidden="true"><DoodleAvatar /></div>
