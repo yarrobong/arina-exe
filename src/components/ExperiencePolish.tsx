@@ -3,14 +3,6 @@ import '../styles/experience-polish.css'
 
 const BOOT_STORAGE_KEY = 'arina-exe:boot-seen:v1'
 
-const timeline = [
-  { year: '2007', label: 'Рождение', detail: 'Пионерский', href: '#childhood' },
-  { year: '2018', label: 'Новая школа', detail: 'Советский', href: '#school-5-9' },
-  { year: '2023', label: 'Казань', detail: 'поездка с классом', href: '#school-5-9' },
-  { year: '2025', label: 'УрФУ', detail: 'бизнес-информатика', href: '#university' },
-  { year: '2026', label: 'Новая глава', detail: 'второй курс', href: '#university' },
-] as const
-
 export function BootSequence() {
   const [visible, setVisible] = useState(() => {
     if (typeof window === 'undefined' || window.location.hash) return false
@@ -51,41 +43,6 @@ export function BootSequence() {
         <small>2007 → NOW</small>
       </div>
     </div>
-  )
-}
-
-export function LifeTimeline() {
-  const [openedAt] = useState(() => new Intl.DateTimeFormat('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(new Date()))
-
-  return (
-    <section className="life-index" aria-labelledby="life-index-title">
-      <header className="life-index__header">
-        <div>
-          <span id="life-index-title">LIFE TIMELINE</span>
-          <small>5 CONFIRMED NODES</small>
-        </div>
-        <strong>ARCHIVE OPENED · {openedAt}</strong>
-      </header>
-
-      <div className="life-index__track" aria-label="Ключевые точки истории Арины">
-        {timeline.map((item, index) => (
-          <a href={item.href} className="life-index__node" key={`${item.year}-${item.label}`}>
-            <i aria-hidden="true">{String(index + 1).padStart(2, '0')}</i>
-            <time>{item.year}</time>
-            <strong>{item.label}</strong>
-            <small>{item.detail}</small>
-          </a>
-        ))}
-      </div>
-
-      <div className="life-index__status" aria-hidden="true">
-        <span>MEMORY INDEX</span><i /><strong>STATUS: LOADED ✓</strong>
-      </div>
-    </section>
   )
 }
 

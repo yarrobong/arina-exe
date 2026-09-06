@@ -13,6 +13,18 @@ const checkpoints = [
   { progress: 0.42, x: 76, y: 452, tag: '12–14', label: 'спортсменка' },
 ]
 
+function getRouteMarker(path: SVGPathElement, progress: number) {
+  const length = path.getTotalLength()
+  const distance = length * progress
+  const sampleOffset = Math.min(4, length * 0.02)
+  const point = path.getPointAtLength(distance)
+  const before = path.getPointAtLength(Math.max(0, distance - sampleOffset))
+  const after = path.getPointAtLength(Math.min(length, distance + sampleOffset))
+  const angle = Math.atan2(after.y - before.y, after.x - before.x) * (180 / Math.PI) + 90
+
+  return { x: point.x, y: point.y, angle }
+}
+
 function RouteCheckpoint({
   scrollYProgress,
   progress,
@@ -36,7 +48,7 @@ function RouteCheckpoint({
 export function SportArchive({ anchorId = 'sport' }: { anchorId?: string | null }) {
   const sceneRef = useRef<HTMLDivElement>(null)
   const routeRef = useRef<SVGPathElement>(null)
-  const [marker, setMarker] = useState({ x: 78, y: 16 })
+  const [marker, setMarker] = useState({ x: 78, y: 16, angle: 0 })
   const reduceMotion = useReducedMotion()
   const { scrollYProgress } = useScroll({
     target: sceneRef,
@@ -66,15 +78,13 @@ export function SportArchive({ anchorId = 'sport' }: { anchorId?: string | null 
   useMotionValueEvent(routeProgress, 'change', (progress) => {
     const path = routeRef.current
     if (!path) return
-    const point = path.getPointAtLength(path.getTotalLength() * progress)
-    setMarker({ x: point.x, y: point.y })
+    setMarker(getRouteMarker(path, progress))
   })
 
   useEffect(() => {
     const path = routeRef.current
     if (!path) return
-    const point = path.getPointAtLength(0)
-    setMarker({ x: point.x, y: point.y })
+    setMarker(getRouteMarker(path, 0))
   }, [])
 
   return (
@@ -130,7 +140,7 @@ export function SportArchive({ anchorId = 'sport' }: { anchorId?: string | null 
                 pathLength="1"
                 style={{ pathLength: routeLength }}
               />
-              <motion.g className="sport-scene__marker" transform={`translate(${marker.x} ${marker.y})`} style={{ opacity: markerGlow }}>
+              <motion.g className="sport-scene__marker" transform={`translate(${marker.x} ${marker.y}) rotate(${marker.angle})`} style={{ opacity: markerGlow }}>
                 <circle r="12" fill="rgba(255,79,163,.12)" filter="url(#sport-route-glow)" />
                 <path d="M 0 -6 L 5 5 L 0 3 L -5 5 Z" fill="#f5f6ff" stroke="#ff4fa3" strokeWidth="1" />
               </motion.g>

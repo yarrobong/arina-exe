@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { motion, useInView, useReducedMotion } from 'motion/react'
+import { assetUrl } from '../utils/assetUrl'
 
 export type StyleAnomalyProps = {
   image: string
@@ -114,7 +115,7 @@ export function StyleAnomaly({ image, title, period, severity, caption }: StyleA
             <small>tap command to decode</small>
           </span>
           <motion.img
-            src={image}
+            src={assetUrl(image)}
             alt={`${title}, ${period}`}
             loading="lazy"
             decoding="async"

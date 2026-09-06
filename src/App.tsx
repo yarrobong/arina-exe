@@ -1,5 +1,5 @@
 import { lazy, useEffect, useRef } from 'react'
-import { BootSequence, ChapterBridge, LifeTimeline, UniversityProfile } from './components/ExperiencePolish'
+import { BootSequence, ChapterBridge, UniversityProfile } from './components/ExperiencePolish'
 import { LazySection } from './components/LazySection'
 import { MemoryFragmentProvider, MemoryFragmentSummary } from './components/MemoryFragments'
 import { MusicDock, type MusicDockHandle } from './components/MusicDock'
@@ -18,11 +18,14 @@ const DeferredInventory = lazy(() => import('./sections/Inventory').then((module
 const DeferredCompromat = lazy(() => import('./sections/Compromat').then((module) => ({ default: module.Compromat })))
 const DeferredFuture = lazy(() => import('./sections/Future').then((module) => ({ default: module.Future })))
 
-const eraMinHeight = (photoCount: number, extra = '300px') => `calc(${Math.max(photoCount, 1)} * 60svh + ${extra})`
+// Era galleries are horizontal now, so their reserved height no longer needs
+// to grow with the number of photos.
+const eraMinHeight = (_photoCount: number, extra = '300px') => `calc(760px + ${extra})`
 
 export default function App() {
   const musicDock = useRef<MusicDockHandle>(null)
   const playChapter = (trackId: string) => musicDock.current?.playTrack(trackId)
+
 
   useEffect(() => {
     const sections = Array.from(document.querySelectorAll<HTMLElement>('[data-music-chapter]'))
@@ -58,12 +61,10 @@ export default function App() {
           <BootSequence />
           <TopNav />
           <Hero />
-          <LifeTimeline />
-
           <LazySection id={eras[0].id} musicChapter={eras[0].id} minHeight={eraMinHeight(eras[0].photos.length)}>
             <DeferredEraSection era={eras[0]} onPlay={playChapter} anchorId={null} />
           </LazySection>
-          <LazySection id="geography" minHeight="190svh">
+          <LazySection id="geography" minHeight="calc(100svh + 140px)">
             <DeferredGeography anchorId={null} />
           </LazySection>
           <LazySection id={eras[1].id} musicChapter={eras[1].id} minHeight={eraMinHeight(eras[1].photos.length)}>

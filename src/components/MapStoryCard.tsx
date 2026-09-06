@@ -8,9 +8,11 @@ type MapStoryCardProps = {
   total: number
   labels: string[]
   onSelect: (index: number) => void
+  onPrevious: () => void
+  onNext: () => void
 }
 
-export function MapStoryCard({ place, active, total, labels, onSelect }: MapStoryCardProps) {
+export function MapStoryCard({ place, active, total, labels, onSelect, onPrevious, onNext }: MapStoryCardProps) {
   const reduceMotion = useReducedMotion()
 
   return (
@@ -37,6 +39,15 @@ export function MapStoryCard({ place, active, total, labels, onSelect }: MapStor
         </motion.div>
       </AnimatePresence>
       <MapProgress active={active} total={total} labels={labels} onSelect={onSelect} />
+      <nav className="map-story-card__navigation" aria-label="Навигация по точкам карты">
+        <button type="button" onClick={onPrevious} disabled={active === 0}>
+          <span aria-hidden="true">←</span> Назад
+        </button>
+        <span aria-live="polite">{String(active + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</span>
+        <button type="button" onClick={onNext} disabled={active === total - 1}>
+          Дальше <span aria-hidden="true">→</span>
+        </button>
+      </nav>
     </div>
   )
 }

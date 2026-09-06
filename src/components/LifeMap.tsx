@@ -5,7 +5,6 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import '../styles/life-map.css'
 import { places } from '../content/places'
 import type { Place } from '../content/types'
-import { useActiveEra } from '../hooks/useActiveEra'
 import { useNearViewport } from '../hooks/useNearViewport'
 import { MapStoryCard } from './MapStoryCard'
 
@@ -111,7 +110,7 @@ export function LifeMap() {
   const exploreModeRef = useRef(false)
   const mapReadyRef = useRef(false)
   const [isExploreMode, setIsExploreMode] = useState(false)
-  const { active, setActive, setStepRef } = useActiveEra(places.length)
+  const [active, setActive] = useState(0)
   const currentPlace = places[active]
   const routeComplete = active === places.length - 1
 
@@ -287,15 +286,9 @@ export function LifeMap() {
     moveCamera(map, places[activeRef.current], window.matchMedia('(prefers-reduced-motion: reduce)').matches)
   }, [isExploreMode])
 
-  const selectStep = (index: number) => {
-    const step = document.querySelector<HTMLElement>(`.life-map__step[data-index="${index}"]`)
-    if (!step) return
-    setActive(index)
-    step.scrollIntoView({
-      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
-      block: 'center',
-    })
-  }
+  const selectStep = (index: number) => setActive(index)
+  const selectPrevious = () => setActive((index) => Math.max(0, index - 1))
+  const selectNext = () => setActive((index) => Math.min(places.length - 1, index + 1))
 
   return (
     <div ref={activationRef} className={`life-map-story${isExploreMode ? ' is-explore' : ''}`}>
@@ -317,6 +310,8 @@ export function LifeMap() {
           total={places.length}
           labels={places.map((place) => place.title)}
           onSelect={selectStep}
+          onPrevious={selectPrevious}
+          onNext={selectNext}
         />
 
         {routeComplete && !isExploreMode && (
@@ -343,21 +338,6 @@ export function LifeMap() {
           </div>
         )}
 
-        {!routeComplete && !isExploreMode && (
-          <span className="life-map__scroll-cue" aria-hidden="true">листай историю <i>↓</i></span>
-        )}
-      </div>
-
-      <div className="life-map__steps" aria-label="Этапы маршрута">
-        {places.map((place, index) => (
-          <article
-            key={place.id}
-            data-index={index}
-            ref={(node) => setStepRef(index, node)}
-            className={index === active ? 'life-map__step is-active' : 'life-map__step'}
-            aria-label={`${place.chapter}. ${place.title}. ${place.years}. ${place.story}`}
-          />
-        ))}
       </div>
     </div>
   )

@@ -52,13 +52,18 @@
 
 .night-chat {
   height: 150svh;
-  margin-top: 20px;
+  margin: 20px 0 0;
+}
+
+.connection-active {
+  margin-left: 0;
+  margin-right: 0;
 }
 
 /* Theater keeps the seat-change reveal, but reaches it sooner. */
 .theater-memory {
   height: 120svh;
-  margin-top: 22px;
+  margin: 22px 0 0;
 }
 
 /* Quiet beats should feel quieter than the hero interactions. */
