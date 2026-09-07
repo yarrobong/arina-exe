@@ -47,7 +47,18 @@ export function VideoArchive() {
   const touchStartX = useRef<number | null>(null)
   const switchTimer = useRef<number | null>(null)
   const resumeAfterSwitch = useRef(false)
+  const isPlayingRef = useRef(isPlaying)
   const activeTape = tapes[active]
+
+  isPlayingRef.current = isPlaying
+
+  const resumeVideo = (video = videoRef.current) => {
+    if (!video || !isPlayingRef.current) return
+    void video.play().catch(() => {
+      if (video === videoRef.current) setIsPlaying(false)
+    })
+  }
+
   const { ref: archiveRef, isNear: isArchiveVisible } = useNearViewport<HTMLElement>({
     rootMargin: '0px',
     threshold: 0.1,
@@ -61,7 +72,7 @@ export function VideoArchive() {
       video.pause()
       return
     }
-    void video.play().catch(() => setIsPlaying(false))
+    resumeVideo(video)
   }, [isPlaying, active, isActivated])
 
   useEffect(() => {
@@ -134,6 +145,7 @@ export function VideoArchive() {
             animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
             exit={{ opacity: 0, scale: 0.99, filter: 'blur(4px)' }}
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            onAnimationComplete={() => resumeVideo()}
           >
             <video
               ref={videoRef}
@@ -142,6 +154,7 @@ export function VideoArchive() {
               loop
               preload="none"
               onClick={togglePlayback}
+              onCanPlay={(event) => resumeVideo(event.currentTarget)}
               onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
               aria-label={activeTape.title}
             >
