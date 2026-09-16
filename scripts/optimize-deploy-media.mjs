@@ -1,12 +1,16 @@
 import { execFileSync } from 'node:child_process'
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import sharp from 'sharp'
 
 const distDir = path.resolve('dist')
 const mediaDir = path.join(distDir, 'media')
 const minAudioBytes = 1500 * 1024
+const minImageBytes = 110 * 1024
+const maxImageWidth = 1080
 let savedBytes = 0
-let optimized = 0
+let optimizedAudio = 0
+let optimizedImages = 0
 let convertedVideos = 0
 
 function ffmpegAvailable() {
@@ -18,7 +22,16 @@ function ffmpegAvailable() {
   }
 }
 
-async function replaceIfSmaller(input, temporary) {
+async function walk(dir) {
+  const entries = await fs.readdir(dir, { withFileTypes: true })
+  return (await Promise.all(entries.map(async (entry) => {
+    const full = path.join(dir, entry.name)
+    if (entry.isDirectory()) return walk(full)
+    return [full]
+  }))).flat()
+}
+
+async function replaceIfSmaller(input, temporary, label = 'optimized') {
   const [before, after] = await Promise.all([fs.stat(input), fs.stat(temporary)])
   if (after.size >= before.size * 0.94) {
     await fs.rm(temporary, { force: true })
@@ -28,8 +41,7 @@ async function replaceIfSmaller(input, temporary) {
   await fs.rename(temporary, input)
   const saved = before.size - after.size
   savedBytes += saved
-  optimized += 1
-  console.log(`[deploy] optimized ${path.relative(distDir, input)}: ${(before.size / 1024 / 1024).toFixed(1)} → ${(after.size / 1024 / 1024).toFixed(1)} MiB`)
+  console.log(`[deploy] ${label} ${path.relative(distDir, input)}: ${(before.size / 1024 / 1024).toFixed(1)} → ${(after.size / 1024 / 1024).toFixed(1)} MiB`)
   return true
 }
 
@@ -47,7 +59,7 @@ async function transcode(input, outputArgs) {
       ...outputArgs,
       temporary,
     ], { stdio: 'inherit' })
-    await replaceIfSmaller(input, temporary)
+    if (await replaceIfSmaller(input, temporary)) optimizedAudio += 1
   } catch (error) {
     await fs.rm(temporary, { force: true }).catch(() => undefined)
     console.warn(`[deploy] media optimization skipped for ${path.relative(distDir, input)}: ${error instanceof Error ? error.message : String(error)}`)
@@ -75,6 +87,54 @@ async function optimizeAudio() {
       '-b:a', '128k',
       '-ar', '44100',
     ])
+  }
+}
+
+async function optimizeImagesForMobile() {
+  let files
+  try {
+    files = await walk(mediaDir)
+  } catch {
+    return
+  }
+
+  for (const file of files) {
+    if (!/\.(?:webp|jpe?g)$/i.test(file)) continue
+
+    const relative = path.relative(mediaDir, file).split(path.sep).join('/')
+    if (relative.startsWith('unused/') || relative.startsWith('разбери и не удаля')) continue
+
+    const before = await fs.stat(file)
+    let metadata
+    try {
+      metadata = await sharp(file).metadata()
+    } catch {
+      continue
+    }
+
+    const width = metadata.width ?? 0
+    if (before.size < minImageBytes && width <= maxImageWidth) continue
+
+    const extension = path.extname(file).toLowerCase()
+    const temporary = `${file}.deploy-${process.pid}${extension}`
+
+    try {
+      let pipeline = sharp(file)
+        .rotate()
+        .resize({ width: maxImageWidth, withoutEnlargement: true })
+
+      if (extension === '.webp') {
+        pipeline = pipeline.webp({ quality: 74, effort: 5, smartSubsample: true })
+      } else {
+        pipeline = pipeline.jpeg({ quality: 78, mozjpeg: true })
+      }
+
+      await pipeline.toFile(temporary)
+      if (await replaceIfSmaller(file, temporary, 'optimized image')) optimizedImages += 1
+    } catch (error) {
+      await fs.rm(temporary, { force: true }).catch(() => undefined)
+      console.warn(`[deploy] image optimization skipped for ${relative}: ${error instanceof Error ? error.message : String(error)}`)
+    }
   }
 }
 
@@ -128,10 +188,11 @@ if (!ffmpegAvailable()) {
   process.exit(1)
 }
 
+await optimizeImagesForMobile()
 await optimizeAudio()
 await transcodeWebmToMp4(path.join('media', 'childhood', 'baby-01.webm'), 640, { muted: true })
 await transcodeWebmToMp4(path.join('media', 'childhood', 'baby-02.webm'), 720, { muted: true })
 await transcodeWebmToMp4(path.join('media', 'friends', 'vadim.webm'), 640, { muted: true, maxRate: '1600k' })
 await transcodeWebmToMp4(path.join('media', 'urfu', 'year-2.webm'), 720, { muted: false, crf: 26 })
 
-console.log(`[deploy] media optimization complete; optimized ${optimized} audio file(s), converted ${convertedVideos} video file(s), net saved ${(savedBytes / 1024 / 1024).toFixed(1)} MiB`)
+console.log(`[deploy] media optimization complete; optimized ${optimizedImages} image(s), ${optimizedAudio} audio file(s), converted ${convertedVideos} video file(s), net saved ${(savedBytes / 1024 / 1024).toFixed(1)} MiB`)
