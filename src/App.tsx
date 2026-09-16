@@ -1,6 +1,7 @@
 import { lazy, useEffect, useRef } from 'react'
 import { BootSequence, ChapterBridge, UniversityProfile } from './components/ExperiencePolish'
 import { LazySection } from './components/LazySection'
+import { MediaWarmup } from './components/MediaWarmup'
 import { MemoryFragmentProvider, MemoryFragmentSummary } from './components/MemoryFragments'
 import { MusicDock, type MusicDockHandle } from './components/MusicDock'
 import { TopNav } from './components/TopNav'
@@ -25,7 +26,6 @@ const eraMinHeight = (_photoCount: number, extra = '300px') => `calc(760px + ${e
 export default function App() {
   const musicDock = useRef<MusicDockHandle>(null)
   const playChapter = (trackId: string) => musicDock.current?.playTrack(trackId)
-
 
   useEffect(() => {
     const sections = Array.from(document.querySelectorAll<HTMLElement>('[data-music-chapter]'))
@@ -56,6 +56,7 @@ export default function App() {
 
   return (
     <MemoryFragmentProvider>
+      <MediaWarmup />
       <div className="desktop-stage">
         <main className="site-shell">
           <BootSequence />
