@@ -7,7 +7,7 @@ type LazyImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'loading
   rootMargin?: string
 }
 
-export function LazyImage({ src, rootMargin = '600px 120px', ...props }: LazyImageProps) {
+export function LazyImage({ src, rootMargin = '1400px 400px', ...props }: LazyImageProps) {
   const { ref, isNear } = useNearViewport<HTMLImageElement>({ rootMargin })
   const resolvedSrc = assetUrl(src)
 
